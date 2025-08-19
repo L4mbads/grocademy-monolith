@@ -1,0 +1,26 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+cmd = "go build -o ./tmp/main.exe ./cmd/grocademy/main.go"
+bin = "./tmp/main.exe"
+log = "air_errors.log"
+delay = 1000 # delay before reload in milliseconds
+exclude_dir = ["build", "tmp", "vendor", "web"]
+exclude_file = []
+exclude_regex = ["_test.go"]
+kill_signal = "SIGINT"
+stop_wait_time = 5000 # wait time for shutdown in milliseconds
+
+[log]
+time = true
+
+[color]
+main = "magenta"
+watcher = "cyan"
+build = "yellow"
+runner = "green"
+app = "white"
+
+[misc]
+clean_on_exit = true

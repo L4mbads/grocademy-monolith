@@ -1,0 +1,72 @@
+services:
+  db:
+    image: postgres:alpine
+    container_name: grocademy_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  migrate:
+    build:
+      context: ../
+      dockerfile: build/Dockerfile
+    container_name: grocademy_migrate
+    environment:
+      DB_HOST: db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: ${DB_PORT}
+      DB_SSLMODE: ${DB_SSLMODE}
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "
+        ./migrate -path /root/migrations -database 'postgres://${DB_USER}:${DB_PASSWORD}@db:${DB_PORT}/${DB_NAME}?sslmode=${DB_SSLMODE}' up
+      "
+    volumes:
+      - ../migrations:/root/migrations
+    networks:
+      - app-network
+
+  app:
+    build:
+      context: ../
+      dockerfile: build/Dockerfile
+    container_name: grocademy_app
+    restart: always
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
+    environment:
+      DB_HOST: db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: ${DB_PORT}
+      DB_SSLMODE: ${DB_SSLMODE}
+      APP_PORT: ${APP_PORT}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - app-network
+
+volumes:
+  db_data:
+
+networks:
+  app-network:
