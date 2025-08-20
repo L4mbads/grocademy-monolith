@@ -62,6 +62,7 @@ func SetupRouter(userHandler *handlers.UserHandler, authHandler *handlers.AuthHa
 			{
 				user.GET("", userHandler.GetUserByID)
 				user.PUT("", userHandler.UpdateUser)
+				user.DELETE("", userHandler.DeleteUser)
 				user.POST("/balance", userHandler.IncrementBalance)
 			}
 		}

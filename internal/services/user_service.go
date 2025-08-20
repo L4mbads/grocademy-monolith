@@ -104,3 +104,22 @@ func (s *UserService) IncrementUserBalance(id uint, increment int) (*models.User
 
 	return &user, nil
 }
+
+func (s *UserService) DeleteUser(id uint) error {
+	var user models.User
+	result := s.DB.First(&user, id)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return errors.New("user not found")
+		}
+		return fmt.Errorf("database error finding user: %w", result.Error)
+	}
+	println(user.Username)
+
+	// GORM's soft delete
+	if deleteResult := s.DB.Delete(&user); deleteResult.Error != nil {
+		return fmt.Errorf("failed to delete user: %w", deleteResult.Error)
+	}
+
+	return nil
+}

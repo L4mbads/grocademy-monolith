@@ -257,3 +257,36 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		"data":    updatedUser,
 	})
 }
+
+// DeleteUser godoc (NEW HANDLER)
+// @Summary Delete a user
+// @Description Deletes a user record by ID (soft delete)
+// @Tags users
+// @Produce  json
+// @Param id path int true "User ID"
+// @Success 204 "User deleted successfully"
+// @Failure 400 {object} map[string]string "Invalid user ID"
+// @Failure 404 {object} map[string]string "User not found"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /users/{id} [delete]
+func (h *UserHandler) DeleteUser(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, errors.New("invalid user ID"))
+		return
+	}
+
+	err = h.UserService.DeleteUser(uint(id))
+
+	if err != nil {
+		if err.Error() == "user not found" {
+			c.AbortWithError(http.StatusNotFound, err)
+			return
+		}
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
