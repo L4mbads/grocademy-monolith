@@ -23,7 +23,7 @@ func SetupRouter(userHandler *handlers.UserHandler, authHandler *handlers.AuthHa
 	r.GET("/login", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "login.html", gin.H{})
 	})
-	r.GET("/", func(c *gin.Context) { // Simple home page
+	r.GET("", func(c *gin.Context) { // Simple home page
 		c.HTML(http.StatusOK, "base.html", gin.H{"title": "Welcome Home"})
 	})
 
@@ -55,11 +55,15 @@ func SetupRouter(userHandler *handlers.UserHandler, authHandler *handlers.AuthHa
 
 		users := protectedAPI.Group("/users")
 		{
-			users.GET("/", userHandler.GetAllUsers)
-			users.POST("/", userHandler.CreateUser)
-			users.GET("/:id", userHandler.GetUserByID)
-			users.POST(":id/balance", userHandler.IncrementBalance)
-			users.PUT("/:id", userHandler.UpdateUser)
+			users.GET("", userHandler.GetAllUsers)
+			users.POST("", userHandler.CreateUser)
+
+			user := users.Group("/:id")
+			{
+				user.GET("", userHandler.GetUserByID)
+				user.PUT("", userHandler.UpdateUser)
+				user.POST("/balance", userHandler.IncrementBalance)
+			}
 		}
 
 		protectedAPI.GET("/profile", func(c *gin.Context) {
@@ -68,6 +72,8 @@ func SetupRouter(userHandler *handlers.UserHandler, authHandler *handlers.AuthHa
 			c.JSON(http.StatusOK, gin.H{"username": username, "email": email, "message": "Authenticated user profile"})
 		})
 	}
+
+	r.RemoveExtraSlash = true
 
 	return r
 }
