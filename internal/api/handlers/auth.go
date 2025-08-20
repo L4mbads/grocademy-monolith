@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -138,4 +139,16 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		"message": "Login successful",
 		"data":    data,
 	})
+
+}
+
+func (h *AuthHandler) Self(c *gin.Context) {
+	username, _ := c.Get("username")
+	user, err := h.AuthService.GetCurrentUser(fmt.Sprint(username))
+
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+	}
+
+	c.JSON(http.StatusOK, user)
 }

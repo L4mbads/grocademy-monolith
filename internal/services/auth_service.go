@@ -12,6 +12,7 @@ import (
 type AuthServicer interface {
 	RegisterUser(username, email, password, firstName, lastName string) (*models.User, error)
 	LoginUser(email, password string) (string, string, error)
+	GetCurrentUser(username string) (*models.User, error)
 }
 
 type AuthService struct {
@@ -81,4 +82,20 @@ func (s *AuthService) LoginUser(identifier, password string) (string, string, er
 	}
 
 	return user.Username, token, nil
+}
+
+func (s *AuthService) GetCurrentUser(username string) (*models.User, error) {
+	var user models.User
+
+	result := s.DB.Where("username = ?", username).First(&user)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, errors.New("invalid credentials")
+		}
+
+		return nil, fmt.Errorf("database error: %w", result.Error)
+	}
+
+	return &user, nil
+
 }

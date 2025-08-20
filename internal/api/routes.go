@@ -48,8 +48,14 @@ func SetupRouter(userHandler *handlers.UserHandler, authHandler *handlers.AuthHa
 	protectedAPI.Use(authMiddleware.GetHandlerFunc())
 
 	{
+		auth := protectedAPI.Group("/auth")
+		{
+			auth.GET("/self", authHandler.Self)
+		}
+
 		users := protectedAPI.Group("/users")
 		{
+			users.GET("/", userHandler.GetAllUsers)
 			users.POST("/", userHandler.CreateUser)
 			users.GET("/:id", userHandler.GetUserByID)
 		}
