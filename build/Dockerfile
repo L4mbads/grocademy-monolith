@@ -21,5 +21,6 @@ WORKDIR /root/
 COPY --from=builder /grocademy .
 COPY --from=migrator /go/bin/migrate .
 COPY --from=builder /app/migrations ./migrations/
+COPY --from=builder /app/web/templates ./web/templates/
 EXPOSE 8080
 CMD ["./grocademy"]

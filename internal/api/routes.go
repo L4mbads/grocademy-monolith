@@ -1,21 +1,64 @@
 package api
 
 import (
+	"net/http"
+
 	"grocademy/internal/api/handlers"
+	"grocademy/internal/api/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter(userHandler *handlers.UserHandler) *gin.Engine {
+// SetupRouter configures the Gin router with API routes.
+func SetupRouter(userHandler *handlers.UserHandler, authHandler *handlers.AuthHandler) *gin.Engine {
 	r := gin.Default()
 
-	apiV1 := r.Group("/api")
+	r.LoadHTMLGlob("web/templates/*.html")
+
+	// r.Static("/static", "./web/static")
+	// Frontend routes
+	r.GET("/register", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "register.html", gin.H{})
+	})
+	r.GET("/login", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "login.html", gin.H{})
+	})
+	r.GET("/", func(c *gin.Context) { // Simple home page
+		c.HTML(http.StatusOK, "base.html", gin.H{"title": "Welcome Home"})
+	})
+
+	// use error (handler) middleware
+	var errorMiddleware middlewares.ErrorMiddleware
+	r.Use(errorMiddleware.GetHandlerFunc())
+
+	// no auth
+	publicAPI := r.Group("/api")
 	{
-		users := apiV1.Group("/users")
+		auth := publicAPI.Group("/auth")
+		{
+			auth.POST("/register", authHandler.Register)
+			auth.POST("/login", authHandler.Login)
+		}
+	}
+
+	// requrires auth (bearer token)
+	protectedAPI := r.Group("/api")
+
+	var authMiddleware middlewares.AuthMiddleware
+	protectedAPI.Use(authMiddleware.GetHandlerFunc())
+
+	{
+		users := protectedAPI.Group("/users")
 		{
 			users.POST("/", userHandler.CreateUser)
 			users.GET("/:id", userHandler.GetUserByID)
 		}
+
+		protectedAPI.GET("/profile", func(c *gin.Context) {
+			username, _ := c.Get("username")
+			email, _ := c.Get("email")
+			c.JSON(http.StatusOK, gin.H{"username": username, "email": email, "message": "Authenticated user profile"})
+		})
 	}
 
 	return r

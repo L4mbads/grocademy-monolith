@@ -1,3 +1,4 @@
+// cmd/web/main.go
 package main
 
 import (
@@ -12,15 +13,22 @@ import (
 
 func main() {
 
+	// Initialize database
 	db.Init()
 	gormDB := db.GetDB()
 
-	userService := services.NewUserService(gormDB)
+	// Initialize services
+	userService := services.NewUserService(gormDB) // Existing user service
+	authService := services.NewAuthService(gormDB) // NEW: Auth service
 
+	// Initialize handlers
 	userHandler := handlers.NewUserHandler(userService)
+	authHandler := handlers.NewAuthHandler(authService) // NEW: Auth handler
 
-	router := api.SetupRouter(userHandler)
+	// Setup router - now takes both handlers
+	router := api.SetupRouter(userHandler, authHandler) // UPDATED
 
+	// Get port from environment variables, default to 8080
 	port := os.Getenv("APP_PORT")
 	if port == "" {
 		port = "8080"
