@@ -58,6 +58,8 @@ func SetupRouter(userHandler *handlers.UserHandler, authHandler *handlers.AuthHa
 			users.GET("/", userHandler.GetAllUsers)
 			users.POST("/", userHandler.CreateUser)
 			users.GET("/:id", userHandler.GetUserByID)
+			users.POST(":id/balance", userHandler.IncrementBalance)
+			users.PUT("/:id", userHandler.UpdateUser)
 		}
 
 		protectedAPI.GET("/profile", func(c *gin.Context) {

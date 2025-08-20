@@ -2,6 +2,8 @@ package services
 
 import (
 	"errors"
+	"fmt"
+	"grocademy/internal/auth"
 	"grocademy/internal/db/models"
 	"grocademy/internal/pkg/pagination"
 
@@ -59,4 +61,46 @@ func (s *UserService) GetAllUsersPaginated(page, limit int64, query string) (any
 	}
 
 	return filteredUser, pagination, nil
+}
+
+func (s *UserService) UpdateUser(id uint, updates map[string]interface{}) (*models.User, error) {
+	var user models.User
+	result := s.DB.First(&user, id)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, errors.New("user not found")
+		}
+		return nil, fmt.Errorf("database error finding user: %w", result.Error)
+	}
+
+	if updates["Password"] != "" {
+		hashedPassword, err := auth.HashPassword(fmt.Sprint(updates["Password"]))
+		if err != nil {
+			return nil, errors.New("failed to hash password")
+		}
+		updates["Password"] = hashedPassword
+	}
+
+	if err := s.DB.Model(&user).Updates(updates).Error; err != nil {
+		return nil, fmt.Errorf("failed to update user: %w", err)
+	}
+
+	return &user, nil
+}
+
+func (s *UserService) IncrementUserBalance(id uint, increment int) (*models.User, error) {
+	var user models.User
+	result := s.DB.First(&user, id)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, errors.New("user not found")
+		}
+		return nil, fmt.Errorf("database error finding user: %w", result.Error)
+	}
+
+	if err := s.DB.Model(&user).Update("balance", user.Balance+increment).Error; err != nil {
+		return nil, fmt.Errorf("failed to update user: %w", err)
+	}
+
+	return &user, nil
 }

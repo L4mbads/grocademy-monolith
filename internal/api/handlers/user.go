@@ -11,8 +11,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type UpdateUserRequest struct {
+	Email     string `json:"email,omitempty" binding:"omitempty,email"`
+	Username  string `json:"username,omitempty" binding:"omitempty"`
+	FirstName string `json:"first_name,omitempty" binding:"omitempty"`
+	LastName  string `json:"last_name,omitempty" binding:"omitempty"`
+	Password  string `json:"password,omitempty" binding:"omitempty"`
+}
+
 type UserHandler struct {
 	UserService *services.UserService
+}
+
+type IncrementRequest struct {
+	Increment string `json:"increment" binding:"required"`
 }
 
 // NewUserHandler creates a new UserHandler
@@ -127,5 +139,121 @@ func (h *UserHandler) GetAllUsers(c *gin.Context) {
 		"message":    "Query success",
 		"data":       paginatedUsers,
 		"pagination": pagination,
+	})
+}
+
+// IncrementBalance godoc (NEW HANDLER)
+// @Summary Increment user balance
+// @Description Increment a specified user's balance by some amount
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param id path int true "User ID"
+// @Param increment amount in request body
+// @Success 200 {object} models.User "Updated user balance"
+// @Failure 404 {object} map[string]string "User not found"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /users/{id}/balance [post]
+func (h *UserHandler) IncrementBalance(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, errors.New("invalid user ID"))
+		return
+	}
+
+	var req IncrementRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	increment, err := strconv.ParseUint(req.Increment, 10, 64)
+
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, errors.New("invalid increment"))
+		return
+	}
+
+	updatedUser, err := h.UserService.IncrementUserBalance(uint(id), int(increment))
+	if err != nil {
+		if err.Error() == "user not found" {
+			c.AbortWithError(http.StatusNotFound, err)
+			return
+		}
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "user updated",
+		"data":    updatedUser,
+	})
+}
+
+// UpdateUser godoc (NEW HANDLER)
+// @Summary Update a user's data
+// @Description Update specified fields of a user by ID
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param id path int true "User ID"
+// @Param user body UpdateUserRequest true "Fields to update"
+// @Success 200 {object} models.User "Updated user object"
+// @Failure 400 {object} map[string]string "Invalid input or no fields to update"
+// @Failure 404 {object} map[string]string "User not found"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /users/{id} [put]
+func (h *UserHandler) UpdateUser(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, errors.New("invalid user ID"))
+		return
+	}
+
+	var req UpdateUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	updates := make(map[string]interface{})
+	if req.Email != "" {
+		updates["Email"] = req.Email
+	}
+	if req.Username != "" {
+		updates["Username"] = req.Username
+	}
+	if req.FirstName != "" {
+		updates["FirstName"] = req.FirstName
+	}
+	if req.LastName != "" {
+		updates["LastName"] = req.LastName
+	}
+	if req.Password != "" {
+		updates["Password"] = req.Password
+	}
+
+	if len(updates) == 0 {
+		c.AbortWithError(http.StatusBadRequest, errors.New("no fields to update"))
+		return
+	}
+
+	updatedUser, err := h.UserService.UpdateUser(uint(id), updates)
+	if err != nil {
+		if err.Error() == "user not found" {
+			c.AbortWithError(http.StatusNotFound, err)
+			return
+		}
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "user updated",
+		"data":    updatedUser,
 	})
 }
