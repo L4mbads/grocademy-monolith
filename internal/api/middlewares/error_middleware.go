@@ -1,8 +1,6 @@
 package middlewares
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,7 +17,7 @@ func (er ErrorMiddleware) GetHandlerFunc() gin.HandlerFunc {
 			err := c.Errors.Last().Err
 
 			// Step4: Respond with a generic error message
-			c.JSON(http.StatusInternalServerError, map[string]any{
+			c.JSON(-1, map[string]any{
 				"status":  "error",
 				"message": err.Error(),
 				"data":    nil,

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"grocademy/internal/services" // Assuming services package contains AuthServicer
@@ -27,6 +28,13 @@ type LoginData struct {
 	Token    string `json:"token"`
 }
 
+type RegisterData struct {
+	ID        string `json:"id"`
+	Username  string `json:"username"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+}
+
 type AuthHandler struct {
 	AuthService services.AuthServicer
 }
@@ -50,21 +58,34 @@ func NewAuthHandler(authService services.AuthServicer) *AuthHandler {
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
-	_, err := h.AuthService.RegisterUser(req.Username, req.Email, req.Password, req.FirstName, req.LastName)
+	user, err := h.AuthService.RegisterUser(req.Username, req.Email, req.Password, req.FirstName, req.LastName)
 	if err != nil {
 		if err.Error() == "username already taken" || err.Error() == "email already registered" {
-			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user: " + err.Error()})
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully"})
+	data := RegisterData{
+		ID:        strconv.FormatUint(uint64(user.ID), 10),
+		Username:  req.Username,
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+	}
+
+	c.JSON(
+		http.StatusCreated,
+		gin.H{
+			"status":  "success",
+			"message": "User registered successfully",
+			"data":    data,
+		})
 }
 
 // Login godoc
