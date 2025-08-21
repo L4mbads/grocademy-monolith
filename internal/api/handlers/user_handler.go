@@ -168,11 +168,6 @@ func (h *UserHandler) IncrementBalance(c *gin.Context) {
 		return
 	}
 
-	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, errors.New("invalid increment"))
-		return
-	}
-
 	updatedUser, err := h.UserService.IncrementUserBalance(uint(id), int(req.Increment))
 	if err != nil {
 		if err.Error() == "user not found" {

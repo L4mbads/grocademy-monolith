@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS courses (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) UNIQUE NOT NULL,
+    instructor VARCHAR(255) NOT NULL,
+    description VARCHAR(100) NOT NULL,
+    topics TEXT[] NOT NULL,
+    price INT NOT NULL,
+    thumbnail_image VARCHAR(255) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
+);

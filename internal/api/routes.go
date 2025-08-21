@@ -22,9 +22,9 @@ func SetupRouter(
 
 	// CORS config
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173", "https://labpro-ohl-2025-fe.hmif.dev"},
+		AllowAllOrigins:  true,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
@@ -88,6 +88,10 @@ func SetupRouter(
 		courses := protectedAPI.Group("/courses")
 		{
 			courses.POST("", courseHandler.CreateCourse)
+			courses.GET("", courseHandler.GetAllCourses)
+			courses.GET("/:id", courseHandler.GetCourseByID)
+			courses.PUT("/:id", courseHandler.UpdateCourse)
+			courses.DELETE("/:id", courseHandler.DeleteCourse)
 		}
 	}
 
