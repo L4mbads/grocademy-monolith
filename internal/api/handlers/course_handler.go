@@ -4,30 +4,25 @@ import (
 	"fmt"
 	"mime/multipart"
 	"net/http"
-	"strings"
 
 	"grocademy/internal/services"
 
 	"github.com/gin-gonic/gin"
 )
 
-// CreateCourseRequest defines the form data for creating a course.
-// Gin's 'form' tag is used for multipart/form-data binding.
 type CreateCourseRequest struct {
 	Title          string                `form:"title" binding:"required"`
 	Description    string                `form:"description" binding:"required"`
 	Instructor     string                `form:"instructor" binding:"required"`
-	Topics         string                `form:"topics" binding:"required"` // Bind as a single string, then split
+	Topics         []string              `form:"topics" binding:"required"` // Bind as a single string, then split
 	Price          float64               `form:"price" binding:"required"`
 	ThumbnailImage *multipart.FileHeader `form:"thumbnail_image"` // The binary image file
 }
 
-// CourseHandler handles course-related API requests.
 type CourseHandler struct {
-	CourseService services.CourseServicer // Assuming we'll create a CourseServicer interface
+	CourseService services.CourseServicer
 }
 
-// NewCourseHandler creates a new CourseHandler.
 func NewCourseHandler(courseService services.CourseServicer) *CourseHandler {
 	return &CourseHandler{CourseService: courseService}
 }
@@ -41,7 +36,7 @@ func NewCourseHandler(courseService services.CourseServicer) *CourseHandler {
 // @Param title formData string true "Course title"
 // @Param description formData string true "Course description"
 // @Param instructor formData string true "Course instructor"
-// @Param topics formData string true "Comma-separated list of topics"
+// @Param topics formData string true "List of topics"
 // @Param price formData number true "Course price"
 // @Param thumbnail_image formData file false "Thumbnail image file"
 // @Success 201 {object} models.Course
@@ -55,15 +50,11 @@ func (h *CourseHandler) CreateCourse(c *gin.Context) {
 		return
 	}
 
-	// For the topics field, we split the string into a slice.
-	topics := strings.Split(req.Topics, ",")
-
-	// Call the service layer to handle the business logic and database interaction.
 	newCourse, err := h.CourseService.CreateCourse(
 		req.Title,
 		req.Description,
 		req.Instructor,
-		topics,
+		req.Topics,
 		req.Price,
 		req.ThumbnailImage,
 	)

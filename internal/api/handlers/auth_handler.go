@@ -150,5 +150,9 @@ func (h *AuthHandler) Self(c *gin.Context) {
 		c.AbortWithError(http.StatusInternalServerError, err)
 	}
 
-	c.JSON(http.StatusOK, user)
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "self",
+		"data":    user,
+	})
 }

@@ -24,7 +24,7 @@ type UserHandler struct {
 }
 
 type IncrementRequest struct {
-	Increment string `json:"increment" binding:"required"`
+	Increment int `json:"increment" binding:"required"`
 }
 
 // NewUserHandler creates a new UserHandler
@@ -168,14 +168,12 @@ func (h *UserHandler) IncrementBalance(c *gin.Context) {
 		return
 	}
 
-	increment, err := strconv.ParseUint(req.Increment, 10, 64)
-
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, errors.New("invalid increment"))
 		return
 	}
 
-	updatedUser, err := h.UserService.IncrementUserBalance(uint(id), int(increment))
+	updatedUser, err := h.UserService.IncrementUserBalance(uint(id), int(req.Increment))
 	if err != nil {
 		if err.Error() == "user not found" {
 			c.AbortWithError(http.StatusNotFound, err)
