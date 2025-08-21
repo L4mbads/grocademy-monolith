@@ -18,15 +18,16 @@ func main() {
 	gormDB := db.GetDB()
 
 	// Initialize services
-	userService := services.NewUserService(gormDB) // Existing user service
-	authService := services.NewAuthService(gormDB) // NEW: Auth service
+	userService := services.NewUserService(gormDB)
+	authService := services.NewAuthService(gormDB)
+	courseService := services.NewCourseService(gormDB)
 
 	// Initialize handlers
 	userHandler := handlers.NewUserHandler(userService)
-	authHandler := handlers.NewAuthHandler(authService) // NEW: Auth handler
+	authHandler := handlers.NewAuthHandler(authService)
+	courseHandler := handlers.NewCourseHandler(courseService)
 
-	// Setup router - now takes both handlers
-	router := api.SetupRouter(userHandler, authHandler) // UPDATED
+	router := api.SetupRouter(userHandler, authHandler, courseHandler)
 
 	// Get port from environment variables, default to 8080
 	port := os.Getenv("APP_PORT")

@@ -10,7 +10,12 @@ import (
 )
 
 // SetupRouter configures the Gin router with API routes.
-func SetupRouter(userHandler *handlers.UserHandler, authHandler *handlers.AuthHandler) *gin.Engine {
+func SetupRouter(
+	userHandler *handlers.UserHandler,
+	authHandler *handlers.AuthHandler,
+	courseHandler *handlers.CourseHandler,
+) *gin.Engine {
+
 	r := gin.Default()
 
 	r.LoadHTMLGlob("web/templates/*.html")
@@ -67,11 +72,10 @@ func SetupRouter(userHandler *handlers.UserHandler, authHandler *handlers.AuthHa
 			}
 		}
 
-		protectedAPI.GET("/profile", func(c *gin.Context) {
-			username, _ := c.Get("username")
-			email, _ := c.Get("email")
-			c.JSON(http.StatusOK, gin.H{"username": username, "email": email, "message": "Authenticated user profile"})
-		})
+		courses := protectedAPI.Group("/courses")
+		{
+			courses.POST("", courseHandler.CreateCourse)
+		}
 	}
 
 	r.RemoveExtraSlash = true
