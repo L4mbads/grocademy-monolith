@@ -16,6 +16,7 @@ func SetupRouter(
 	userHandler *handlers.UserHandler,
 	authHandler *handlers.AuthHandler,
 	courseHandler *handlers.CourseHandler,
+	moduleHandler *handlers.ModuleHandler,
 ) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
@@ -92,6 +93,20 @@ func SetupRouter(
 			courses.GET("/:id", courseHandler.GetCourseByID)
 			courses.PUT("/:id", courseHandler.UpdateCourse)
 			courses.DELETE("/:id", courseHandler.DeleteCourse)
+
+			modulesByCourse := courses.Group("/:id/modules")
+			{
+				modulesByCourse.POST("/", moduleHandler.CreateModule)
+				modulesByCourse.GET("/", moduleHandler.GetAllModulesByCourseID)
+				modulesByCourse.PATCH("/reorder", moduleHandler.ReorderModules)
+			}
+		}
+
+		modules := protectedAPI.Group("/modules")
+		{
+			modules.GET("/:id", moduleHandler.GetModuleByID)
+			modules.PUT("/:id", moduleHandler.UpdateModule)
+			modules.DELETE("/:id", moduleHandler.DeleteModule)
 		}
 	}
 
