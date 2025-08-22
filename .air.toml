@@ -1,12 +1,13 @@
 root = "."
 tmp_dir = "tmp"
+poll = true
 
 [build]
 cmd = "go build -o ./tmp/main.exe ./cmd/grocademy/main.go"
 bin = "./tmp/main.exe"
 log = "air_errors.log"
 delay = 1000 # delay before reload in milliseconds
-exclude_dir = ["build", "tmp", "vendor", "web"]
+exclude_dir = ["build", "tmp", "vendor"]
 exclude_file = []
 exclude_regex = ["_test.go"]
 kill_signal = "SIGINT"

@@ -1,0 +1,35 @@
+{{ define "layout.html" }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ block "title" . }}{{ end }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-title">My Web</div>
+      <button class="nav-toggle" id="nav-toggle">☰</button>
+      <div class="nav-links" id="nav-links">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/my-course">My Course</a>
+        <a href="/browse-course">Browse Course</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page Content -->
+  <main class="content">
+    {{ block "content" . }}{{ end }}
+  </main>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>
+{{ end }}

@@ -8,9 +8,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type AuthMiddleware struct{}
+type AuthAPIMiddleware struct{}
 
-func (am AuthMiddleware) GetHandlerFunc() gin.HandlerFunc {
+func NewAuthAPIMiddleware() *AuthAPIMiddleware {
+	return &AuthAPIMiddleware{}
+}
+
+func (am AuthAPIMiddleware) GetHandlerFunc() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var tokenString string
 		var err error

@@ -46,24 +46,42 @@ func NewRouter(
 		MaxAge:           12 * time.Hour,
 	}))
 
-	r.GET("/health", func(c *gin.Context) { c.JSON(200, gin.H{"status": "ok"}) })
-	r.LoadHTMLGlob("web/templates/*.html")
+	// bruh
+	// r.LoadHTMLGlob("web/templates/components/*.html")
+	// r.LoadHTMLGlob("web/templates/*.html")
+	r.LoadHTMLFiles(
+		"web/templates/layout.html",
+		"web/templates/dashboard.html",
+		"web/templates/register.html",
+		"web/templates/login.html")
+	r.Static("/static", "./web/static")
 
-	// r.Static("/static", "./web/static")
-	// Frontend routes
+	// use error (handler) middleware
+	var errorMiddleware middlewares.ErrorMiddleware
+	r.Use(errorMiddleware.GetHandlerFunc())
+
+	// Public FE routes
 	r.GET("/register", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "register.html", gin.H{})
 	})
 	r.GET("/login", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "login.html", gin.H{})
 	})
-	r.GET("", func(c *gin.Context) { // Simple home page
-		c.HTML(http.StatusOK, "base.html", gin.H{"title": "Welcome Home"})
-	})
 
-	// use error (handler) middleware
-	var errorMiddleware middlewares.ErrorMiddleware
-	r.Use(errorMiddleware.GetHandlerFunc())
+	// Protected FE routes
+	authWebMiddleware := middlewares.NewAuthWebMiddleware()
+	authenticatedWeb := r.Group("")
+	authenticatedWeb.Use(authWebMiddleware.GetHandlerFunc())
+	{
+		authenticatedWeb.GET("", func(c *gin.Context) {
+			c.Redirect(http.StatusMovedPermanently, "/dashboard")
+		})
+		authenticatedWeb.GET("/dashboard", func(c *gin.Context) {
+			c.HTML(http.StatusOK, "dashboard.html", gin.H{})
+		})
+	}
+
+	r.GET("/health", func(c *gin.Context) { c.JSON(200, gin.H{"status": "ok"}) })
 
 	// no auth
 	publicAPI := r.Group("/api")
@@ -78,8 +96,8 @@ func NewRouter(
 	// requrires auth (bearer token)
 	protectedAPI := r.Group("/api")
 
-	var authMiddleware middlewares.AuthMiddleware
-	protectedAPI.Use(authMiddleware.GetHandlerFunc())
+	authAPIMiddleware := middlewares.NewAuthAPIMiddleware()
+	protectedAPI.Use(authAPIMiddleware.GetHandlerFunc())
 
 	{
 		auth := protectedAPI.Group("/auth")

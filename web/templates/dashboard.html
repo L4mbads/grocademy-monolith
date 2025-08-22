@@ -1,0 +1,16 @@
+{{ define "title" }}Dashboard{{ end }}
+{{ template "layout.html" . }}
+
+{{ define "content" }}
+<div class="dashboard">
+  <h1>Welcome, <span id="user-name">Loading...</span></h1>
+
+  <div class="user-card">
+    <p><strong>Username:</strong> <span id="user-username">-</span></p>
+    <p><strong>Email:</strong> <span id="user-email">-</span></p>
+    <p><strong>First Name:</strong> <span id="user-firstname">-</span></p>
+    <p><strong>Last Name:</strong> <span id="user-lastname">-</span></p>
+    <p><strong>Balance:</strong> $<span id="user-balance">0</span></p>
+    <p><strong>Joined:</strong> <span id="user-created">-</span></p>
+</div>
+{{ end }}

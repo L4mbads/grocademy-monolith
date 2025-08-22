@@ -1,81 +1,28 @@
-{{define "register.html"}}
-<div class="bg-white p-8 rounded-lg shadow-md w-full">
-    <h2 class="text-2xl font-semibold mb-6 text-center text-gray-800">Register Account</h2>
-    <form id="registerForm" class="space-y-4">
-        <div>
-            <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
-            <input type="text" id="username" name="username" required
-                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-        </div>
-        <div>
-            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-            <input type="email" id="email" name="email" required
-                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-        </div>
-        <div>
-            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-            <input type="password" id="password" name="password" required minlength="6"
-                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-        </div>
-        <div>
-            <label for="first_name" class="block text-sm font-medium text-gray-700">First Name</label>
-            <input type="text" id="first_name" name="first_name" required
-                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-        </div>
-        <div>
-            <label for="last_name" class="block text-sm font-medium text-gray-700">Last Name</label>
-            <input type="text" id="last_name" name="last_name" required
-                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-        </div>
-        <button type="submit"
-                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-            Register
-        </button>
+{{ define "register.html" }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Register</h1>
+    <form id="register-form">
+      <input type="text" name="name" placeholder="Full Name" required>
+      <input type="email" name="email" placeholder="Email" required>
+      <input type="password" name="password" placeholder="Password" required>
+      <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+      <button type="submit">Create Account</button>
     </form>
-    <div id="message" class="mt-4 text-center text-sm"></div>
-</div>
-<script>
-    document.getElementById('registerForm').addEventListener('submit', async function(event) {
-        event.preventDefault();
-        const username = document.getElementById('username').value;
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const firstName = document.getElementById('first_name').value;
-        const lastName = document.getElementById('last_name').value;
-        const messageDiv = document.getElementById('message');
-
-        const newUser = {
-            username: username,
-            email: email,
-            password: password,
-            first_name: firstName,
-            last_name: lastName
-        };
-        try {
-            const response = await fetch('/api/auth/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(newUser),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                messageDiv.className = 'mt-4 text-center text-sm text-green-600';
-                messageDiv.textContent = data.message || 'Registration successful!';
-                // Optionally redirect to login page
-                setTimeout(() => { window.location.href = '/login'; }, 2000);
-            } else {
-                messageDiv.className = 'mt-4 text-center text-sm text-red-600';
-                messageDiv.textContent = data.error || 'Registration failed!';
-            }
-        } catch (error) {
-            messageDiv.className = 'mt-4 text-center text-sm text-red-600';
-            messageDiv.textContent = 'An error occurred. Please try again.';
-            console.error('Error:', error);
-        }
-    });
-</script>
-{{end}}
+    <div id="register-message" class="form-message"></div>
+    <div class="alt-action">
+      Already have an account? <a href="/login">Login</a>
+    </div>
+  </div>
+  <script src="/static/script.js"></script>
+</body>
+</html>
+{{ end }}
