@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS courses (
     instructor VARCHAR(255) NOT NULL,
     description VARCHAR(100) NOT NULL,
     topics TEXT[] NOT NULL,
-    price INT NOT NULL,
+    price NUMERIC NOT NULL,
     thumbnail_image VARCHAR(255) NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,

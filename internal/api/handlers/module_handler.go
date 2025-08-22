@@ -95,7 +95,7 @@ func (h *ModuleHandler) CreateModule(c *gin.Context) {
 			c.AbortWithError(http.StatusNotFound, err)
 			return
 		}
-		c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("Failed to create module: %v", err))
+		c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("failed to create module: %v", err))
 		return
 	}
 
@@ -180,7 +180,7 @@ func (h *ModuleHandler) GetModuleByID(c *gin.Context) {
 			c.AbortWithError(http.StatusNotFound, err)
 			return
 		}
-		c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("Failed to retrieve module: %v", err))
+		c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("failed to retrieve module: %v", err))
 		return
 	}
 

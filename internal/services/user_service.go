@@ -44,7 +44,7 @@ func (s *UserService) GetUsers() ([]models.User, error) {
 	return users, nil
 }
 
-func (s *UserService) GetAllUsersPaginated(page, limit int64, query string) (any, pagination.Pagination, error) {
+func (s *UserService) GetAllUsersPaginated(page, limit int64, query string) (*[]models.User, pagination.Pagination, error) {
 	var users []models.User
 	searchableColumns := []string{"username", "email", "first_name", "last_name"}
 
@@ -60,7 +60,9 @@ func (s *UserService) GetAllUsersPaginated(page, limit int64, query string) (any
 		return nil, pagination, err
 	}
 
-	return filteredUser, pagination, nil
+	assertedUser := filteredUser.(*[]models.User)
+
+	return assertedUser, pagination, nil
 }
 
 func (s *UserService) UpdateUser(id uint, updates map[string]interface{}) (*models.User, error) {
@@ -71,6 +73,10 @@ func (s *UserService) UpdateUser(id uint, updates map[string]interface{}) (*mode
 			return nil, errors.New("user not found")
 		}
 		return nil, fmt.Errorf("database error finding user: %w", result.Error)
+	}
+
+	if user.Username == "admin" {
+		return nil, errors.New("update on admin user is prohibited")
 	}
 
 	if updates["Password"] != "" {
@@ -88,7 +94,7 @@ func (s *UserService) UpdateUser(id uint, updates map[string]interface{}) (*mode
 	return &user, nil
 }
 
-func (s *UserService) IncrementUserBalance(id uint, increment int) (*models.User, error) {
+func (s *UserService) IncrementUserBalance(id uint, increment float64) (*models.User, error) {
 	var user models.User
 	result := s.DB.First(&user, id)
 	if result.Error != nil {
@@ -114,7 +120,9 @@ func (s *UserService) DeleteUser(id uint) error {
 		}
 		return fmt.Errorf("database error finding user: %w", result.Error)
 	}
-	println(user.Username)
+	if user.Username == "admin" {
+		return errors.New("deletion on admin user is prohibited")
+	}
 
 	// GORM's soft delete
 	if deleteResult := s.DB.Delete(&user); deleteResult.Error != nil {

@@ -19,7 +19,7 @@ import (
 type CourseServicer interface {
 	CreateCourse(title, description, instructor string, topics []string, price float64, thumbnail *multipart.FileHeader) (*models.Course, error)
 	GetCourseByID(id uint) (*models.Course, error)
-	GetAllCoursesPaginated(page, limit int64, query string) (any, pagination.Pagination, error)
+	GetAllCoursesPaginated(page, limit int64, query string) (*[]models.Course, pagination.Pagination, error)
 	UpdateCourse(id uint, updates map[string]interface{}, thumbnail *multipart.FileHeader) (*models.Course, error)
 	DeleteCourse(id uint) error
 }
@@ -100,7 +100,7 @@ func (s *CourseService) GetCourseByID(id uint) (*models.Course, error) {
 	return &course, nil
 }
 
-func (s *CourseService) GetAllCoursesPaginated(page, limit int64, query string) (any, pagination.Pagination, error) {
+func (s *CourseService) GetAllCoursesPaginated(page, limit int64, query string) (*[]models.Course, pagination.Pagination, error) {
 	var courses []models.Course
 	searchableColumns := []string{"title", "instructor", "topics"}
 
@@ -112,10 +112,13 @@ func (s *CourseService) GetAllCoursesPaginated(page, limit int64, query string) 
 		searchableColumns,
 		query,
 	)
+
+	assertedCourses, _ := filteredCourses.(*[]models.Course)
+
 	if err != nil {
 		return nil, pagination, err
 	}
-	return filteredCourses, pagination, nil
+	return assertedCourses, pagination, nil
 }
 
 func (s *CourseService) UpdateCourse(id uint, updates map[string]interface{}, thumbnail *multipart.FileHeader) (*models.Course, error) {

@@ -13,7 +13,7 @@ type Pagination struct {
 	TotalItems  int64 `json:"total_items"`
 }
 
-func Paginate(db *gorm.DB, dest any, page, limit int64, searchableColumns []string, query string) (*any, Pagination, error) {
+func Paginate(db *gorm.DB, dest any, page, limit int64, searchableColumns []string, query string) (any, Pagination, error) {
 	var totalItems int64
 
 	countDB := db
@@ -68,5 +68,5 @@ func Paginate(db *gorm.DB, dest any, page, limit int64, searchableColumns []stri
 		return nil, pagination, err
 	}
 
-	return &dest, pagination, nil
+	return dest, pagination, nil
 }

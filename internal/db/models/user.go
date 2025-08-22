@@ -16,5 +16,5 @@ type User struct {
 	Password  string         `json:"-" gorm:"not null"`
 	FirstName string         `json:"first_name" gorm:"not null"`
 	LastName  string         `json:"last_name" gorm:"not null"`
-	Balance   int            `json:"balance" gorm:"not null"`
+	Balance   float64        `json:"balance" gorm:"not null"`
 }

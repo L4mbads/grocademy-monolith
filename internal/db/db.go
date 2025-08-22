@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
+	"grocademy/internal/auth"
 	"grocademy/internal/db/models"
 )
 
@@ -45,14 +46,59 @@ func Init() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	err = DB.AutoMigrate(&models.User{})
+	err = DB.AutoMigrate(
+		&models.User{},
+		&models.Course{},
+		&models.Module{},
+		&models.Enrollment{},
+		&models.ModuleProgress{},
+	)
 	if err != nil {
 		log.Fatalf("Failed to auto migrate database: %v", err)
 	}
 
 	log.Println("Database connection established and migrations applied (if any).")
+
+	createDefaultAdmin(DB)
 }
 
 func GetDB() *gorm.DB {
 	return DB
+}
+
+func createDefaultAdmin(db *gorm.DB) {
+	adminUsername := "admin"
+	adminEmail := "admin@example.com"
+	adminPassword := "admin123"
+	adminFirstName := "admin"
+	adminLastName := "admin"
+	adminBalance := 9999999999.0
+
+	var adminUser models.User
+	result := db.Where("email = ?", adminEmail).First(&adminUser)
+
+	if result.Error != nil && result.Error == gorm.ErrRecordNotFound {
+		hashedPassword, err := auth.HashPassword(adminPassword)
+		if err != nil {
+			log.Fatalf("Failed to hash admin password: %v", err)
+		}
+
+		newAdmin := models.User{
+			Username:  adminUsername,
+			Email:     adminEmail,
+			Password:  hashedPassword,
+			FirstName: adminFirstName,
+			LastName:  adminLastName,
+			Balance:   adminBalance,
+		}
+
+		if createResult := db.Create(&newAdmin); createResult.Error != nil {
+			log.Fatalf("Failed to create default admin user: %v", createResult.Error)
+		}
+		log.Println("Default admin user created successfully.")
+	} else if result.Error != nil {
+		log.Fatalf("Database error while checking for admin user: %v", result.Error)
+	} else {
+		log.Println("Default admin user already exists.")
+	}
 }

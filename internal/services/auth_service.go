@@ -25,6 +25,10 @@ func NewAuthService(db *gorm.DB) *AuthService {
 
 func (s *AuthService) RegisterUser(username, email, password, firstName, lastName string) (*models.User, error) {
 
+	if username == "admin" || email == "admin@example.com" {
+		return nil, errors.New("username is reserved")
+	}
+
 	var existingUser models.User
 
 	if err := s.DB.Where("username = ?", username).Or("email = ?", email).First(&existingUser).Error; err == nil {

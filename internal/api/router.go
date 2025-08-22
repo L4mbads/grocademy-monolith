@@ -1,7 +1,9 @@
 package api
 
 import (
+	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"grocademy/internal/api/handlers"
@@ -11,13 +13,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// SetupRouter configures the Gin router with API routes.
-func SetupRouter(
+type StartableRouter interface {
+	Start()
+}
+
+type GinRouterWrapper struct {
+	ginEngine *gin.Engine
+}
+
+func NewRouter(
 	userHandler *handlers.UserHandler,
 	authHandler *handlers.AuthHandler,
 	courseHandler *handlers.CourseHandler,
 	moduleHandler *handlers.ModuleHandler,
-) *gin.Engine {
+) GinRouterWrapper {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
@@ -112,5 +121,17 @@ func SetupRouter(
 
 	r.RemoveExtraSlash = true
 
-	return r
+	return GinRouterWrapper{ginEngine: r}
+}
+
+func (g GinRouterWrapper) Start() {
+	port := os.Getenv("APP_PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Printf("Server starting on :%s", port)
+	if err := g.ginEngine.Run(":" + port); err != nil {
+		log.Fatalf("Server failed to start: %v", err)
+	}
 }

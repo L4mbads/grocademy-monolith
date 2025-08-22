@@ -20,7 +20,7 @@ import (
 type ModuleServicer interface {
 	CreateModule(courseID uint, title, description string, order int, pdf *multipart.FileHeader, video *multipart.FileHeader) (*models.Module, error)
 	GetModuleByID(id uint) (*models.Module, error)
-	GetAllModulesByCourseID(courseID uint, page, limit int64, query string) (any, pagination.Pagination, error)
+	GetAllModulesByCourseID(courseID uint, page, limit int64, query string) (*[]models.Module, pagination.Pagination, error)
 	UpdateModule(id uint, updates map[string]interface{}, pdf *multipart.FileHeader, video *multipart.FileHeader) (*models.Module, error)
 	DeleteModule(id uint) error
 	ReorderModules(courseID uint, moduleOrders []models.Module) error // Expects a slice of Module with ID and Order
@@ -98,7 +98,7 @@ func (s *ModuleService) GetModuleByID(id uint) (*models.Module, error) {
 }
 
 // GetAllModulesByCourseID retrieves all modules for a specific course with pagination and search.
-func (s *ModuleService) GetAllModulesByCourseID(courseID uint, page, limit int64, query string) (any, pagination.Pagination, error) {
+func (s *ModuleService) GetAllModulesByCourseID(courseID uint, page, limit int64, query string) (*[]models.Module, pagination.Pagination, error) {
 	var modules []models.Module
 	searchableColumns := []string{"title", "description"} // Columns to search within modules
 
@@ -113,10 +113,13 @@ func (s *ModuleService) GetAllModulesByCourseID(courseID uint, page, limit int64
 		searchableColumns,
 		query,
 	)
+
+	assertedModules := filteredModules.(*[]models.Module)
+
 	if err != nil {
 		return nil, pagination, err
 	}
-	return filteredModules, pagination, nil
+	return assertedModules, pagination, nil
 }
 
 // UpdateModule updates an existing module, handling partial updates and optional file updates.

@@ -24,10 +24,9 @@ type UserHandler struct {
 }
 
 type IncrementRequest struct {
-	Increment int `json:"increment" binding:"required"`
+	Increment float64 `json:"increment" binding:"required"`
 }
 
-// NewUserHandler creates a new UserHandler
 func NewUserHandler(userService *services.UserService) *UserHandler {
 	return &UserHandler{UserService: userService}
 }
@@ -142,7 +141,7 @@ func (h *UserHandler) GetAllUsers(c *gin.Context) {
 	})
 }
 
-// IncrementBalance godoc (NEW HANDLER)
+// IncrementBalance godoc
 // @Summary Increment user balance
 // @Description Increment a specified user's balance by some amount
 // @Tags users
@@ -168,7 +167,7 @@ func (h *UserHandler) IncrementBalance(c *gin.Context) {
 		return
 	}
 
-	updatedUser, err := h.UserService.IncrementUserBalance(uint(id), int(req.Increment))
+	updatedUser, err := h.UserService.IncrementUserBalance(uint(id), req.Increment)
 	if err != nil {
 		if err.Error() == "user not found" {
 			c.AbortWithError(http.StatusNotFound, err)
