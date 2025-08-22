@@ -105,8 +105,8 @@ func NewRouter(
 
 			modulesByCourse := courses.Group("/:id/modules")
 			{
-				modulesByCourse.POST("/", moduleHandler.CreateModule)
-				modulesByCourse.GET("/", moduleHandler.GetAllModulesByCourseID)
+				modulesByCourse.POST("", moduleHandler.CreateModule)
+				modulesByCourse.GET("", moduleHandler.GetAllModulesByCourseID)
 				modulesByCourse.PATCH("/reorder", moduleHandler.ReorderModules)
 			}
 		}

@@ -80,7 +80,7 @@ func (s *AuthService) LoginUser(identifier, password string) (string, string, er
 		return "", "", errors.New("invalid credentials")
 	}
 
-	token, err := auth.GenerateJWT(user.Username, user.Email)
+	token, err := auth.GenerateJWT(user.ID, user.Username, user.Email)
 	if err != nil {
 		return "", "", errors.New("failed to generate token")
 	}

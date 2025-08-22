@@ -18,8 +18,8 @@ import (
 
 type CourseServicer interface {
 	CreateCourse(title, description, instructor string, topics []string, price float64, thumbnail *multipart.FileHeader) (*models.Course, error)
-	GetCourseByID(id uint) (*models.Course, error)
-	GetAllCoursesPaginated(page, limit int64, query string) (*[]models.Course, pagination.Pagination, error)
+	GetCourseByID(id uint) (*models.Course, int64, error)
+	GetAllCoursesPaginated(page, limit int64, query string) (*[]map[string]interface{}, pagination.Pagination, error)
 	UpdateCourse(id uint, updates map[string]interface{}, thumbnail *multipart.FileHeader) (*models.Course, error)
 	DeleteCourse(id uint) error
 }
@@ -88,37 +88,97 @@ func (s *CourseService) CreateCourse(
 	return &course, nil
 }
 
-func (s *CourseService) GetCourseByID(id uint) (*models.Course, error) {
+func (s *CourseService) GetCourseByID(id uint) (*models.Course, int64, error) {
 	var course models.Course
 	result := s.DB.First(&course, id)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, errors.New("course not found")
+			return nil, 0, errors.New("course not found")
 		}
-		return nil, fmt.Errorf("database error finding course: %w", result.Error)
+		return nil, 0, fmt.Errorf("database error finding course: %w", result.Error)
 	}
-	return &course, nil
+	var totalModules int64
+	s.DB.Model(&models.Module{}).Where("course_id = ?", id).Count(&totalModules)
+
+	return &course, totalModules, nil
 }
 
-func (s *CourseService) GetAllCoursesPaginated(page, limit int64, query string) (*[]models.Course, pagination.Pagination, error) {
-	var courses []models.Course
-	searchableColumns := []string{"title", "instructor", "topics"}
+func (s *CourseService) GetAllCoursesPaginated(page, limit int64, query string) (*[]map[string]interface{}, pagination.Pagination, error) {
+	// var courses []models.Course
+	// searchableColumns := []string{"title", "instructor", "topics"}
 
-	filteredCourses, pagination, err := pagination.Paginate(
-		s.DB.Model(&models.Course{}),
-		&courses,
-		page,
-		limit,
-		searchableColumns,
-		query,
-	)
+	// filteredCourses, pagination, err := pagination.Paginate(
+	// 	s.DB.Model(&models.Course{}),
+	// 	&courses,
+	// 	page,
+	// 	limit,
+	// 	searchableColumns,
+	// 	query,
+	// )
 
-	assertedCourses, _ := filteredCourses.(*[]models.Course)
+	// assertedCourses, _ := filteredCourses.(*[]models.Course)
 
+	// if err != nil {
+	// 	return nil, pagination, err
+	// }
+	// return assertedCourses, pagination, nil
+	// A custom struct for the query result, including the module count.
+	var results []struct {
+		models.Course
+		TotalModules int64
+	}
+
+	// Build the base query for both filtering and counting.
+	dbQuery := s.DB.Model(&models.Course{}).
+		Select("courses.*, count(modules.id) as total_modules").
+		Joins("left join modules on modules.course_id = courses.id").
+		Group("courses.id")
+
+	// Apply search filtering
+	if query != "" {
+		searchQuery := ""
+		searchableColumns := []string{"title", "description", "instructor", "topics"}
+		args := make([]interface{}, len(searchableColumns))
+		for i, col := range searchableColumns {
+			searchQuery += fmt.Sprintf("courses.%s ILIKE ?", col)
+			if i < len(searchableColumns)-1 {
+				searchQuery += " OR "
+			}
+			args[i] = fmt.Sprintf("%%%s%%", query)
+		}
+		dbQuery = dbQuery.Where(searchQuery, args...)
+	}
+
+	// Count total items for pagination first
+	var totalItems int64
+	dbQuery.Count(&totalItems)
+
+	// Paginate the query and execute
+	_, pagination, err := pagination.Paginate(dbQuery, &results, page, limit, nil, "")
 	if err != nil {
 		return nil, pagination, err
 	}
-	return assertedCourses, pagination, nil
+
+	// Transfer data to a final response format
+	var coursesWithCount []map[string]interface{}
+	for _, res := range results {
+		courseMap := map[string]interface{}{
+			"id":             res.ID,
+			"title":          res.Title,
+			"description":    res.Description,
+			"instructor":     res.Instructor,
+			"topics":         res.Topics,
+			"price":          res.Price,
+			"thumbnail_path": res.ThumbnailImage,
+			"created_at":     res.CreatedAt,
+			"updated_at":     res.UpdatedAt,
+			"deleted_at":     res.DeletedAt,
+			"total_modules":  res.TotalModules, // ADDED
+		}
+		coursesWithCount = append(coursesWithCount, courseMap)
+	}
+
+	return &coursesWithCount, pagination, nil
 }
 
 func (s *CourseService) UpdateCourse(id uint, updates map[string]interface{}, thumbnail *multipart.FileHeader) (*models.Course, error) {

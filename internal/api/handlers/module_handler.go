@@ -141,16 +141,35 @@ func (h *ModuleHandler) GetAllModulesByCourseID(c *gin.Context) {
 		return
 	}
 
-	paginatedModules, pagination, err := h.ModuleService.GetAllModulesByCourseID(uint(courseID), int64(page), int64(limit), "")
+	userID, _ := c.Get("id")
+
+	paginatedModules, progressMap, pagination, err := h.ModuleService.GetAllModulesByCourseID(uint(courseID), userID.(uint), int64(page), int64(limit), "")
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("failed to retrieve modules: %v", err))
 		return
 	}
 
+	var enrichedModules []map[string]interface{}
+	for _, module := range *paginatedModules {
+		enrichedModule := map[string]interface{}{
+			"id":            module.ID,
+			"course_id":     module.CourseID,
+			"title":         module.Title,
+			"description":   module.Description,
+			"order":         module.Order,
+			"pdf_content":   module.PDFPath,
+			"video_content": module.VideoPath,
+			"created_at":    module.CreatedAt,
+			"updated_at":    module.UpdatedAt,
+			"is_completed":  (*progressMap)[module.ID],
+		}
+		enrichedModules = append(enrichedModules, enrichedModule)
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":     "success",
 		"message":    "Modules queried",
-		"data":       paginatedModules,
+		"data":       enrichedModules,
 		"pagination": pagination,
 	})
 }
@@ -174,7 +193,9 @@ func (h *ModuleHandler) GetModuleByID(c *gin.Context) {
 		return
 	}
 
-	module, err := h.ModuleService.GetModuleByID(uint(id))
+	userID, _ := c.Get("id")
+
+	module, completion, err := h.ModuleService.GetModuleByID(uint(id), userID.(uint))
 	if err != nil {
 		if err.Error() == "module not found" {
 			c.AbortWithError(http.StatusNotFound, err)
@@ -184,10 +205,23 @@ func (h *ModuleHandler) GetModuleByID(c *gin.Context) {
 		return
 	}
 
+	enrichedModule := map[string]interface{}{
+		"id":            module.ID,
+		"course_id":     module.CourseID,
+		"title":         module.Title,
+		"description":   module.Description,
+		"order":         module.Order,
+		"pdf_content":   module.PDFPath,
+		"video_content": module.VideoPath,
+		"created_at":    module.CreatedAt,
+		"updated_at":    module.UpdatedAt,
+		"is_completed":  completion,
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
 		"message": "module found",
-		"data":    module,
+		"data":    enrichedModule,
 	})
 }
 

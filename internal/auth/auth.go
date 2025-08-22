@@ -11,6 +11,7 @@ import (
 )
 
 type JWTClaims struct {
+	ID       uint   `json:"id"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	jwt.RegisteredClaims
@@ -40,10 +41,11 @@ func CheckPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
-func GenerateJWT(username, email string) (string, error) {
+func GenerateJWT(id uint, username string, email string) (string, error) {
 	expirationTime := time.Now().Add(1 * time.Hour)
 
 	claims := &JWTClaims{
+		ID:       id,
 		Username: username,
 		Email:    email,
 		RegisteredClaims: jwt.RegisteredClaims{

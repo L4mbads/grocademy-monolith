@@ -7,11 +7,17 @@ import (
 	"net/http"
 	"strconv"
 
+	"grocademy/internal/db/models"
 	"grocademy/internal/pkg/string_array"
 	"grocademy/internal/services"
 
 	"github.com/gin-gonic/gin"
 )
+
+type CourseResponse struct {
+	models.Course
+	TotalModules int64 `json:"total_modules"` // NEW
+}
 
 type CreateCourseRequest struct {
 	Title          string                `form:"title" binding:"required"`
@@ -102,7 +108,7 @@ func (h *CourseHandler) GetCourseByID(c *gin.Context) {
 		return
 	}
 
-	course, err := h.CourseService.GetCourseByID(uint(id))
+	course, totalModules, err := h.CourseService.GetCourseByID(uint(id))
 	if err != nil {
 		if err.Error() == "course not found" {
 			c.AbortWithError(http.StatusNotFound, err)
@@ -112,10 +118,15 @@ func (h *CourseHandler) GetCourseByID(c *gin.Context) {
 		return
 	}
 
+	response := CourseResponse{
+		Course:       *course,
+		TotalModules: totalModules,
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
 		"message": "Query success",
-		"data":    course,
+		"data":    response,
 	})
 }
 

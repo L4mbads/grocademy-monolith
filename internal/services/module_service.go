@@ -19,8 +19,8 @@ import (
 // ModuleServicer defines the interface for module-related operations.
 type ModuleServicer interface {
 	CreateModule(courseID uint, title, description string, order int, pdf *multipart.FileHeader, video *multipart.FileHeader) (*models.Module, error)
-	GetModuleByID(id uint) (*models.Module, error)
-	GetAllModulesByCourseID(courseID uint, page, limit int64, query string) (*[]models.Module, pagination.Pagination, error)
+	GetModuleByID(id uint, userID uint) (*models.Module, bool, error)
+	GetAllModulesByCourseID(courseID uint, userID uint, page, limit int64, query string) (*[]models.Module, *[]models.ModuleProgress, pagination.Pagination, error)
 	UpdateModule(id uint, updates map[string]interface{}, pdf *multipart.FileHeader, video *multipart.FileHeader) (*models.Module, error)
 	DeleteModule(id uint) error
 	ReorderModules(courseID uint, moduleOrders []models.Module) error // Expects a slice of Module with ID and Order
@@ -85,20 +85,32 @@ func (s *ModuleService) CreateModule(
 }
 
 // GetModuleByID retrieves a module by its ID.
-func (s *ModuleService) GetModuleByID(id uint) (*models.Module, error) {
+func (s *ModuleService) GetModuleByID(id uint, userID uint) (*models.Module, bool, error) {
 	var module models.Module
 	result := s.DB.First(&module, id)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, errors.New("module not found")
+			return nil, false, errors.New("module not found")
 		}
-		return nil, fmt.Errorf("database error finding module: %w", result.Error)
+		return nil, false, fmt.Errorf("database error finding module: %w", result.Error)
 	}
-	return &module, nil
+
+	var progress models.ModuleProgress
+
+	progressResult := s.DB.
+		Where("user_id = ? AND module_id = ?", userID, id).
+		First(&progress)
+
+	isCompleted := false
+	if progressResult.Error == nil {
+		isCompleted = progress.IsCompleted
+	}
+
+	return &module, isCompleted, nil
 }
 
 // GetAllModulesByCourseID retrieves all modules for a specific course with pagination and search.
-func (s *ModuleService) GetAllModulesByCourseID(courseID uint, page, limit int64, query string) (*[]models.Module, pagination.Pagination, error) {
+func (s *ModuleService) GetAllModulesByCourseID(courseID uint, userID uint, page, limit int64, query string) (*[]models.Module, *[]models.ModuleProgress, pagination.Pagination, error) {
 	var modules []models.Module
 	searchableColumns := []string{"title", "description"} // Columns to search within modules
 
@@ -116,10 +128,18 @@ func (s *ModuleService) GetAllModulesByCourseID(courseID uint, page, limit int64
 
 	assertedModules := filteredModules.(*[]models.Module)
 
-	if err != nil {
-		return nil, pagination, err
+	var progress []models.ModuleProgress
+	s.DB.Where("user_id = ? AND module_id IN (?)", userID, s.getModuleIDs(modules)).Find(&progress)
+
+	progressMap := make(map[uint]bool)
+	for _, p := range progress {
+		progressMap[p.ModuleID] = p.IsCompleted
 	}
-	return assertedModules, pagination, nil
+
+	if err != nil {
+		return nil, &progress, pagination, err
+	}
+	return assertedModules, &progress, pagination, nil
 }
 
 // UpdateModule updates an existing module, handling partial updates and optional file updates.
@@ -287,4 +307,12 @@ func saveContentFile(file *multipart.FileHeader, subDir string) (string, error) 
 		return "", fmt.Errorf("failed to save file: %w", err)
 	}
 	return savePath, nil
+}
+
+func (s *ModuleService) getModuleIDs(modules []models.Module) []uint {
+	ids := make([]uint, len(modules))
+	for i, module := range modules {
+		ids[i] = module.ID
+	}
+	return ids
 }
