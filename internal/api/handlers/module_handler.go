@@ -17,7 +17,6 @@ import (
 type CreateModuleRequest struct {
 	Title        string                `form:"title" binding:"required"`
 	Description  string                `form:"description" binding:"required"`
-	Order        int                   `form:"order" binding:"required,min=0"`
 	PDFContent   *multipart.FileHeader `form:"pdf_content"`
 	VideoContent *multipart.FileHeader `form:"video_content"`
 }
@@ -86,7 +85,6 @@ func (h *ModuleHandler) CreateModule(c *gin.Context) {
 		uint(courseID),
 		req.Title,
 		req.Description,
-		req.Order,
 		req.PDFContent,
 		req.VideoContent,
 	)

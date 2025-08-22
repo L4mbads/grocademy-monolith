@@ -140,7 +140,11 @@ func (s *CourseService) GetAllCoursesPaginated(page, limit int64, query string) 
 		searchableColumns := []string{"title", "description", "instructor", "topics"}
 		args := make([]interface{}, len(searchableColumns))
 		for i, col := range searchableColumns {
-			searchQuery += fmt.Sprintf("courses.%s ILIKE ?", col)
+			if col == "topics" {
+				searchQuery += "EXISTS (SELECT 1 FROM unnest(courses.topics) AS t WHERE t ILIKE ?)"
+			} else {
+				searchQuery += fmt.Sprintf("courses.%s ILIKE ?", col)
+			}
 			if i < len(searchableColumns)-1 {
 				searchQuery += " OR "
 			}

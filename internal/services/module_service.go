@@ -7,6 +7,7 @@ import (
 	"mime/multipart"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"time"
 
@@ -18,9 +19,9 @@ import (
 
 // ModuleServicer defines the interface for module-related operations.
 type ModuleServicer interface {
-	CreateModule(courseID uint, title, description string, order int, pdf *multipart.FileHeader, video *multipart.FileHeader) (*models.Module, error)
+	CreateModule(courseID uint, title, description string, pdf *multipart.FileHeader, video *multipart.FileHeader) (*models.Module, error)
 	GetModuleByID(id uint, userID uint) (*models.Module, bool, error)
-	GetAllModulesByCourseID(courseID uint, userID uint, page, limit int64, query string) (*[]models.Module, *[]models.ModuleProgress, pagination.Pagination, error)
+	GetAllModulesByCourseID(courseID uint, userID uint, page, limit int64, query string) (*[]models.Module, *map[uint]bool, pagination.Pagination, error)
 	UpdateModule(id uint, updates map[string]interface{}, pdf *multipart.FileHeader, video *multipart.FileHeader) (*models.Module, error)
 	DeleteModule(id uint) error
 	ReorderModules(courseID uint, moduleOrders []models.Module) error // Expects a slice of Module with ID and Order
@@ -38,7 +39,7 @@ func NewModuleService(db *gorm.DB) *ModuleService {
 
 // CreateModule creates a new module for a given course, handling file uploads.
 func (s *ModuleService) CreateModule(
-	courseID uint, title, description string, order int,
+	courseID uint, title, description string,
 	pdf *multipart.FileHeader, video *multipart.FileHeader,
 ) (*models.Module, error) {
 	// Check if the course exists
@@ -49,6 +50,14 @@ func (s *ModuleService) CreateModule(
 		}
 		return nil, fmt.Errorf("database error checking course: %w", err)
 	}
+
+	var lastModule models.Module
+	if err := s.DB.Where("course_id = ?", courseID).Order("\"order\" DESC").First(&lastModule).Error; err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("database error getting last module order: %w", err)
+		}
+	}
+	newOrder := lastModule.Order + 1
 
 	var pdfPath string
 	if pdf != nil {
@@ -72,7 +81,7 @@ func (s *ModuleService) CreateModule(
 		CourseID:    courseID,
 		Title:       title,
 		Description: description,
-		Order:       order,
+		Order:       newOrder,
 		PDFPath:     pdfPath,
 		VideoPath:   videoPath,
 	}
@@ -110,7 +119,7 @@ func (s *ModuleService) GetModuleByID(id uint, userID uint) (*models.Module, boo
 }
 
 // GetAllModulesByCourseID retrieves all modules for a specific course with pagination and search.
-func (s *ModuleService) GetAllModulesByCourseID(courseID uint, userID uint, page, limit int64, query string) (*[]models.Module, *[]models.ModuleProgress, pagination.Pagination, error) {
+func (s *ModuleService) GetAllModulesByCourseID(courseID uint, userID uint, page, limit int64, query string) (*[]models.Module, *map[uint]bool, pagination.Pagination, error) {
 	var modules []models.Module
 	searchableColumns := []string{"title", "description"} // Columns to search within modules
 
@@ -129,17 +138,19 @@ func (s *ModuleService) GetAllModulesByCourseID(courseID uint, userID uint, page
 	assertedModules := filteredModules.(*[]models.Module)
 
 	var progress []models.ModuleProgress
-	s.DB.Where("user_id = ? AND module_id IN (?)", userID, s.getModuleIDs(modules)).Find(&progress)
+	s.DB.Where("user_id = ? AND module_id IN (?)", userID, s.getModuleIDs(*assertedModules)).Find(&progress)
 
 	progressMap := make(map[uint]bool)
 	for _, p := range progress {
+		println(p.ModuleID)
+		println(p.IsCompleted)
 		progressMap[p.ModuleID] = p.IsCompleted
 	}
 
 	if err != nil {
-		return nil, &progress, pagination, err
+		return nil, &progressMap, pagination, err
 	}
-	return assertedModules, &progress, pagination, nil
+	return assertedModules, &progressMap, pagination, nil
 }
 
 // UpdateModule updates an existing module, handling partial updates and optional file updates.
@@ -237,45 +248,107 @@ func (s *ModuleService) DeleteModule(id uint) error {
 
 // ReorderModules updates the order of multiple modules within a specific course.
 func (s *ModuleService) ReorderModules(courseID uint, moduleOrders []models.Module) error {
-	tx := s.DB.Begin() // Start a transaction for atomicity
+	// tx := s.DB.Begin() // Start a transaction for atomicity
+	// if tx.Error != nil {
+	// 	return fmt.Errorf("failed to begin transaction: %w", tx.Error)
+	// }
+
+	// defer func() {
+	// 	if r := recover(); r != nil {
+	// 		tx.Rollback()
+	// 	}
+	// }()
+
+	// // 1. Validate that all module IDs belong to the specified course
+	// var existingModules []models.Module
+	// moduleIDs := make([]uint, len(moduleOrders))
+	// orderMap := make(map[uint]int) // Map for quick lookup of new orders
+	// for i, mo := range moduleOrders {
+	// 	moduleIDs[i] = mo.ID
+	// 	orderMap[mo.ID] = mo.Order
+	// }
+
+	// // Fetch existing modules to verify ownership
+	// if err := tx.Where("id IN (?) AND course_id = ?", moduleIDs, courseID).Find(&existingModules).Error; err != nil {
+	// 	tx.Rollback()
+	// 	return fmt.Errorf("database error verifying module ownership: %w", err)
+	// }
+	// if len(existingModules) != len(moduleOrders) {
+	// 	tx.Rollback()
+	// 	return errors.New("some module IDs do not belong to the specified course or are invalid")
+	// }
+
+	// // 2. Perform updates in a loop
+	// for _, moduleData := range moduleOrders {
+	// 	if err := tx.Model(&models.Module{}).Where("id = ?", moduleData.ID).Update("order", moduleData.Order).Error; err != nil {
+	// 		tx.Rollback()
+	// 		return fmt.Errorf("failed to update order for module %d: %w", moduleData.ID, err)
+	// 	}
+	// }
+
+	// return tx.Commit().Error // Commit the transaction
+	// 1. Start a transaction for atomicity.
+	tx := s.DB.Begin()
 	if tx.Error != nil {
 		return fmt.Errorf("failed to begin transaction: %w", tx.Error)
 	}
-
 	defer func() {
 		if r := recover(); r != nil {
 			tx.Rollback()
 		}
 	}()
 
-	// 1. Validate that all module IDs belong to the specified course
-	var existingModules []models.Module
+	// 2. Validate that all module IDs in the request belong to the specified course.
 	moduleIDs := make([]uint, len(moduleOrders))
-	orderMap := make(map[uint]int) // Map for quick lookup of new orders
+	moduleIDsMap := make(map[uint]struct{})
 	for i, mo := range moduleOrders {
 		moduleIDs[i] = mo.ID
-		orderMap[mo.ID] = mo.Order
+		moduleIDsMap[mo.ID] = struct{}{}
 	}
 
-	// Fetch existing modules to verify ownership
-	if err := tx.Where("id IN (?) AND course_id = ?", moduleIDs, courseID).Find(&existingModules).Error; err != nil {
+	var existingModules []models.Module
+	if err := tx.Select("id").Where("id IN (?) AND course_id = ?", moduleIDs, courseID).Find(&existingModules).Error; err != nil {
 		tx.Rollback()
 		return fmt.Errorf("database error verifying module ownership: %w", err)
 	}
+
 	if len(existingModules) != len(moduleOrders) {
 		tx.Rollback()
 		return errors.New("some module IDs do not belong to the specified course or are invalid")
 	}
 
-	// 2. Perform updates in a loop
+	// 3. Check for duplicate order values in the input request itself.
+	// This prevents a bad request from hitting the database at all.
+	orderCheck := make(map[int]struct{})
+	for _, mo := range moduleOrders {
+		if _, ok := orderCheck[mo.Order]; ok {
+			tx.Rollback()
+			return fmt.Errorf("duplicate order number %d in the request", mo.Order)
+		}
+		orderCheck[mo.Order] = struct{}{}
+	}
+
+	// 4. Update the order of each module one by one.
+	// We sort the modules by their new order to ensure a logical update flow.
+	// This is not strictly necessary with GORM's Updates, but it's good practice.
+	sort.Slice(moduleOrders, func(i, j int) bool {
+		return moduleOrders[i].Order < moduleOrders[j].Order
+	})
+
 	for _, moduleData := range moduleOrders {
-		if err := tx.Model(&models.Module{}).Where("id = ?", moduleData.ID).Update("order", moduleData.Order).Error; err != nil {
+		println(moduleData.ID)
+		println(moduleData.Order)
+		if err := tx.Model(&models.Module{}).
+			Where("id = ? AND course_id = ?", moduleData.ID, courseID).
+			Update("order", moduleData.Order).Error; err != nil {
 			tx.Rollback()
 			return fmt.Errorf("failed to update order for module %d: %w", moduleData.ID, err)
 		}
 	}
 
-	return tx.Commit().Error // Commit the transaction
+	// 5. Commit the transaction.
+	return tx.Commit().Error
+
 }
 
 // saveContentFile is a helper function to store uploaded PDF/Video files.
@@ -310,9 +383,9 @@ func saveContentFile(file *multipart.FileHeader, subDir string) (string, error) 
 }
 
 func (s *ModuleService) getModuleIDs(modules []models.Module) []uint {
-	ids := make([]uint, len(modules))
-	for i, module := range modules {
-		ids[i] = module.ID
+	var ids []uint
+	for _, module := range modules {
+		ids = append(ids, module.ID)
 	}
 	return ids
 }

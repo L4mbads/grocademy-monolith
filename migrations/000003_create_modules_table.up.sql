@@ -11,6 +11,3 @@ CREATE TABLE IF NOT EXISTS modules (
     deleted_at TIMESTAMPTZ,
     CONSTRAINT fk_modules_course FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
 );
-
--- Add unique constraint to course_id and order, so no two modules in the same course have the same order
-CREATE UNIQUE INDEX IF NOT EXISTS idx_course_id_order ON modules (course_id, "order") WHERE deleted_at IS NULL;
