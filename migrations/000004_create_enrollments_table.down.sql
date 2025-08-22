@@ -1,1 +1,2 @@
 DROP TABLE IF EXISTS enrollments;
+DROP INDEX CONCURRENTLY IF EXISTS uq_user_course;

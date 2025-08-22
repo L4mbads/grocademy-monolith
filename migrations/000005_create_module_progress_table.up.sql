@@ -8,9 +8,7 @@ CREATE TABLE IF NOT EXISTS module_progresses (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ,
     CONSTRAINT fk_module_progresses_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT fk_module_progresses_module FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE,
-    CONSTRAINT uq_user_module CHECK (deleted_at IS NOT NULL OR NOT EXISTS (
-        SELECT 1 FROM module_progresses mp
-        WHERE mp.user_id = user_id AND mp.module_id = module_id AND mp.deleted_at IS NULL
-    ))
+    CONSTRAINT fk_module_progresses_module FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE
 );
+
+CREATE UNIQUE INDEX uq_user_module ON module_progresses (user_id, module_id);

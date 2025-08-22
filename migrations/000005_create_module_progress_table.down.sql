@@ -1,1 +1,2 @@
 DROP TABLE IF EXISTS module_progresses;
+DROP INDEX CONCURRENTLY IF EXISTS uq_user_module;
