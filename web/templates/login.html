@@ -47,7 +47,7 @@
                 console.log('Login successful. JWT token is in an HttpOnly cookie.');
 
                 // Redirect to a protected page after successful login
-                setTimeout(() => { window.location.href = '/api/v1/profile'; }, 1000);
+                setTimeout(() => { window.location.href = '/'; }, 1000);
             } else {
                 messageDiv.className = 'mt-4 text-center text-sm text-red-600';
                 messageDiv.textContent = data.error || 'Login failed!';

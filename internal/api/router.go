@@ -11,6 +11,11 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+
+	docs "grocademy/api"
+
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type StartableRouter interface {
@@ -29,6 +34,7 @@ func NewRouter(
 ) GinRouterWrapper {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
+	docs.SwaggerInfo.BasePath = "/api"
 
 	// CORS config
 	r.Use(cors.New(cors.Config{
@@ -118,6 +124,8 @@ func NewRouter(
 			modules.DELETE("/:id", moduleHandler.DeleteModule)
 		}
 	}
+
+	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	r.RemoveExtraSlash = true
 

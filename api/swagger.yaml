@@ -1,0 +1,1026 @@
+basePath: /api
+definitions:
+  grocademy_internal_db_models.Course:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      instructor:
+        type: string
+      price:
+        type: number
+      thumbnail_image:
+        type: string
+      title:
+        type: string
+      topics:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+    type: object
+  grocademy_internal_db_models.Module:
+    properties:
+      course_id:
+        description: Foreign key to Course
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      order:
+        description: Module order within the course
+        type: integer
+      pdf_content:
+        description: Path to the stored PDF file
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+      video_content:
+        description: Path to the stored video file
+        type: string
+    type: object
+  grocademy_internal_db_models.User:
+    properties:
+      balance:
+        type: number
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      last_name:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  internal_api_handlers.LoginRequest:
+    properties:
+      identifier:
+        type: string
+      password:
+        type: string
+    required:
+    - identifier
+    - password
+    type: object
+  internal_api_handlers.RegisterRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      username:
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    - username
+    type: object
+  internal_api_handlers.ReorderModulesRequest:
+    properties:
+      module_order:
+        items:
+          properties:
+            id:
+              type: integer
+            order:
+              type: integer
+          required:
+          - id
+          - order
+          type: object
+        type: array
+    required:
+    - module_order
+    type: object
+  internal_api_handlers.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+externalDocs:
+  description: OpenAPI
+  url: https://swagger.io/resources/open-api/
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: Fachriza Ahmad Setiyono - Seleksi Labpro 3
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Grocademy API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate a user with email and password, and return a JWT token
+        in an HttpOnly cookie
+      parameters:
+      - description: User login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_handlers.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: Login successful'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: Invalid input'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: 'error: Invalid credentials'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: Internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Log in a user
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with username, email, and password
+      parameters:
+      - description: User registration details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_handlers.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 'message: User registered successfully'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: Invalid input'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: 'error: Username or email already taken'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: Internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register a new user
+      tags:
+      - auth
+  /auth/self:
+    get:
+      description: Get currently logged-in user, based on token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User
+          schema:
+            $ref: '#/definitions/grocademy_internal_db_models.User'
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get current user
+      tags:
+      - auth
+  /courses:
+    get:
+      description: Retrieve a list of all courses with optional pagination and search
+        parameters
+      parameters:
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Items per page (default 10)
+        in: query
+        name: limit
+        type: integer
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/grocademy_internal_db_models.Course'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get all courses with pagination and search
+      tags:
+      - courses
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create a new course from multipart form data
+      parameters:
+      - description: Course title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Course description
+        in: formData
+        name: description
+        required: true
+        type: string
+      - description: Course instructor
+        in: formData
+        name: instructor
+        required: true
+        type: string
+      - description: List of topics
+        in: formData
+        name: topics
+        required: true
+        type: string
+      - description: Course price
+        in: formData
+        name: price
+        required: true
+        type: number
+      - description: Thumbnail image file
+        in: formData
+        name: thumbnail_image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/grocademy_internal_db_models.Course'
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Create a new course
+      tags:
+      - courses
+  /courses/{courseId}/modules:
+    get:
+      description: Retrieve a list of all modules for a given course, with optional
+        pagination and search parameters
+      parameters:
+      - description: Course ID
+        in: path
+        name: courseId
+        required: true
+        type: integer
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Items per page (default 10)
+        in: query
+        name: limit
+        type: integer
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/grocademy_internal_db_models.Module'
+            type: array
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get all modules for a specific course with pagination and search
+      tags:
+      - modules
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create a new module from multipart form data for the given course
+        ID
+      parameters:
+      - description: Course ID
+        in: path
+        name: courseId
+        required: true
+        type: integer
+      - description: Module title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Module description
+        in: formData
+        name: description
+        required: true
+        type: string
+      - description: Module order within the course
+        in: formData
+        name: order
+        required: true
+        type: integer
+      - description: PDF file for module content
+        in: formData
+        name: pdf_content
+        type: file
+      - description: Video file for module content
+        in: formData
+        name: video_content
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/grocademy_internal_db_models.Module'
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Course not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Create a new module for a specific course
+      tags:
+      - modules
+  /courses/{courseId}/modules/reorder:
+    patch:
+      consumes:
+      - application/json
+      description: Update the order of multiple modules for a specific course
+      parameters:
+      - description: Course ID
+        in: path
+        name: courseId
+        required: true
+        type: integer
+      - description: List of module IDs and their new orders
+        in: body
+        name: module_order
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_handlers.ReorderModulesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: Modules reordered successfully'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid input or modules not belonging to course
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Reorder modules within a course
+      tags:
+      - modules
+  /courses/{id}:
+    delete:
+      description: Deletes a course record by ID (soft delete)
+      parameters:
+      - description: Course ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Course deleted successfully
+        "400":
+          description: Invalid course ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Course not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Delete a course
+      tags:
+      - courses
+    get:
+      description: Retrieve a single course by its ID
+      parameters:
+      - description: Course ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/grocademy_internal_db_models.Course'
+        "400":
+          description: Invalid course ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Course not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get a course by ID
+      tags:
+      - courses
+    put:
+      consumes:
+      - multipart/form-data
+      description: Update specified fields of a course by ID, with optional thumbnail
+        upload
+      parameters:
+      - description: Course ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Course title
+        in: formData
+        name: title
+        type: string
+      - description: Course description
+        in: formData
+        name: description
+        type: string
+      - description: Course instructor
+        in: formData
+        name: instructor
+        type: string
+      - description: Comma-separated list of topics
+        in: formData
+        name: topics
+        type: string
+      - description: Course price
+        in: formData
+        name: price
+        type: number
+      - description: New thumbnail image file
+        in: formData
+        name: thumbnail_image
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated course object
+          schema:
+            $ref: '#/definitions/grocademy_internal_db_models.Course'
+        "400":
+          description: Invalid input or no fields to update
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Course not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Update a course's data
+      tags:
+      - courses
+  /modules/{id}:
+    delete:
+      description: Deletes a module record by ID (soft delete)
+      parameters:
+      - description: Module ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Module deleted successfully
+        "400":
+          description: Invalid module ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Module not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Delete a module
+      tags:
+      - modules
+    get:
+      description: Retrieve a single module by its ID
+      parameters:
+      - description: Module ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/grocademy_internal_db_models.Module'
+        "400":
+          description: Invalid module ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Module not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get a module by ID
+      tags:
+      - modules
+    put:
+      consumes:
+      - multipart/form-data
+      description: Update specified fields of a module by ID, with optional file uploads
+      parameters:
+      - description: Module ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Module title
+        in: formData
+        name: title
+        type: string
+      - description: Module description
+        in: formData
+        name: description
+        type: string
+      - description: Module order within the course
+        in: formData
+        name: order
+        type: integer
+      - description: New PDF file for module content
+        in: formData
+        name: pdf_content
+        type: file
+      - description: New Video file for module content
+        in: formData
+        name: video_content
+        type: file
+      - description: Set to true to clear existing PDF content
+        in: formData
+        name: clear_pdf
+        type: boolean
+      - description: Set to true to clear existing Video content
+        in: formData
+        name: clear_video
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated module object
+          schema:
+            $ref: '#/definitions/grocademy_internal_db_models.Module'
+        "400":
+          description: Invalid input or no fields to update
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Module not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Update a module's data
+      tags:
+      - modules
+  /users:
+    get:
+      description: Retrieve a list of all users with optional pagination and search
+        parameters
+      parameters:
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Items per page (default 10)
+        in: query
+        name: limit
+        type: integer
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/grocademy_internal_db_models.User'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get all users with pagination and search
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Create a new user with the input payload
+      parameters:
+      - description: User object to be created
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/grocademy_internal_db_models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/grocademy_internal_db_models.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Create a new user
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      description: Deletes a user record by ID (soft delete)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: User deleted successfully
+        "400":
+          description: Invalid user ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Delete a user
+      tags:
+      - users
+    get:
+      description: Get a single user by their ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/grocademy_internal_db_models.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Get a user by ID
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Update specified fields of a user by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Fields to update
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_handlers.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated user object
+          schema:
+            $ref: '#/definitions/grocademy_internal_db_models.User'
+        "400":
+          description: Invalid input or no fields to update
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Update a user's data
+      tags:
+      - users
+  /users/{id}/balance:
+    post:
+      consumes:
+      - application/json
+      description: Increment a specified user's balance by some amount
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Increment
+        in: body
+        name: increment
+        required: true
+        schema:
+          type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated user balance
+          schema:
+            $ref: '#/definitions/grocademy_internal_db_models.User'
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Increment user balance
+      tags:
+      - users
+securityDefinitions:
+  Bearer:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

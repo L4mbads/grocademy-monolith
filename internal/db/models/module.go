@@ -10,7 +10,7 @@ type Module struct {
 	ID          uint           `gorm:"primaryKey" json:"id"`
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
-	DeletedAt   gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	DeletedAt   gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty" swaggerignore:"true"`
 	CourseID    uint           `json:"course_id" gorm:"not null"` // Foreign key to Course
 	Course      Course         `json:"-"`                         // GORM association
 	Title       string         `json:"title" gorm:"not null"`

@@ -61,6 +61,7 @@ func NewCourseHandler(courseService services.CourseServicer) *CourseHandler {
 // @Success 201 {object} models.Course
 // @Failure 400 {object} map[string]string "Invalid input"
 // @Failure 500 {object} map[string]string "Internal server error"
+// @Security Bearer
 // @Router /courses [post]
 func (h *CourseHandler) CreateCourse(c *gin.Context) {
 	var req CreateCourseRequest
@@ -99,6 +100,7 @@ func (h *CourseHandler) CreateCourse(c *gin.Context) {
 // @Failure 400 {object} map[string]string "Invalid course ID"
 // @Failure 404 {object} map[string]string "Course not found"
 // @Failure 500 {object} map[string]string "Internal server error"
+// @Security Bearer
 // @Router /courses/{id} [get]
 func (h *CourseHandler) GetCourseByID(c *gin.Context) {
 	idStr := c.Param("id")
@@ -138,8 +140,9 @@ func (h *CourseHandler) GetCourseByID(c *gin.Context) {
 // @Param page query int false "Page number (default 1)"
 // @Param limit query int false "Items per page (default 10)"
 // @Param q query string false "Search query"
-// @Success 200 {object} pagination.PaginatedResponse{data=[]models.Course}
+// @Success 200 {object} []models.Course
 // @Failure 500 {object} map[string]string "Internal server error"
+// @Security Bearer
 // @Router /courses [get]
 func (h *CourseHandler) GetAllCourses(c *gin.Context) {
 	pageStr := c.DefaultQuery("page", "1")
@@ -188,6 +191,7 @@ func (h *CourseHandler) GetAllCourses(c *gin.Context) {
 // @Failure 400 {object} map[string]string "Invalid input or no fields to update"
 // @Failure 404 {object} map[string]string "Course not found"
 // @Failure 500 {object} map[string]string "Internal server error"
+// @Security Bearer
 // @Router /courses/{id} [put]
 func (h *CourseHandler) UpdateCourse(c *gin.Context) {
 	idStr := c.Param("id")
@@ -254,6 +258,7 @@ func (h *CourseHandler) UpdateCourse(c *gin.Context) {
 // @Failure 400 {object} map[string]string "Invalid course ID"
 // @Failure 404 {object} map[string]string "Course not found"
 // @Failure 500 {object} map[string]string "Internal server error"
+// @Security Bearer
 // @Router /courses/{id} [delete]
 func (h *CourseHandler) DeleteCourse(c *gin.Context) {
 	idStr := c.Param("id")

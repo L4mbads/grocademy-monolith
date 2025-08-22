@@ -12,7 +12,7 @@ type Course struct {
 	ID             uint                     `gorm:"primaryKey" json:"id"`
 	CreatedAt      time.Time                `json:"created_at"`
 	UpdatedAt      time.Time                `json:"updated_at"`
-	DeletedAt      gorm.DeletedAt           `gorm:"index" json:"deleted_at,omitempty"`
+	DeletedAt      gorm.DeletedAt           `gorm:"index" json:"deleted_at,omitempty" swaggerignore:"true"`
 	Title          string                   `json:"title" gorm:"unique;not null"`
 	Description    string                   `json:"description" gorm:"type:text"`
 	Instructor     string                   `json:"instructor"`

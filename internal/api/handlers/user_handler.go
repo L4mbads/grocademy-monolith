@@ -41,6 +41,7 @@ func NewUserHandler(userService *services.UserService) *UserHandler {
 // @Success 200 {object} models.User
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
+// @Security Bearer
 // @Router /users [post]
 func (h *UserHandler) CreateUser(c *gin.Context) {
 	var user models.User
@@ -71,6 +72,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
+// @Security Bearer
 // @Router /users/{id} [get]
 func (h *UserHandler) GetUserByID(c *gin.Context) {
 	idStr := c.Param("id")
@@ -105,8 +107,9 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 // @Param page query int false "Page number (default 1)"
 // @Param limit query int false "Items per page (default 10)"
 // @Param q query string false "Search query"
-// @Success 200 {object} pagination.PaginatedResponse{data=[]models.User}
+// @Success 200 {object} []models.User
 // @Failure 500 {object} map[string]string
+// @Security Bearer
 // @Router /users [get]
 func (h *UserHandler) GetAllUsers(c *gin.Context) {
 	pageStr := c.DefaultQuery("page", "1")
@@ -148,10 +151,11 @@ func (h *UserHandler) GetAllUsers(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param id path int true "User ID"
-// @Param increment amount in request body
+// @Param increment body float64 true "Increment"
 // @Success 200 {object} models.User "Updated user balance"
 // @Failure 404 {object} map[string]string "User not found"
 // @Failure 500 {object} map[string]string "Internal server error"
+// @Security Bearer
 // @Router /users/{id}/balance [post]
 func (h *UserHandler) IncrementBalance(c *gin.Context) {
 	idStr := c.Param("id")
@@ -196,6 +200,7 @@ func (h *UserHandler) IncrementBalance(c *gin.Context) {
 // @Failure 400 {object} map[string]string "Invalid input or no fields to update"
 // @Failure 404 {object} map[string]string "User not found"
 // @Failure 500 {object} map[string]string "Internal server error"
+// @Security Bearer
 // @Router /users/{id} [put]
 func (h *UserHandler) UpdateUser(c *gin.Context) {
 	idStr := c.Param("id")
@@ -260,6 +265,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 // @Failure 400 {object} map[string]string "Invalid user ID"
 // @Failure 404 {object} map[string]string "User not found"
 // @Failure 500 {object} map[string]string "Internal server error"
+// @Security Bearer
 // @Router /users/{id} [delete]
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	idStr := c.Param("id")

@@ -10,7 +10,7 @@ type ModuleProgress struct {
 	ID          uint           `gorm:"primaryKey" json:"id"`
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
-	DeletedAt   gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	DeletedAt   gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty" swaggerignore:"true"`
 	UserID      uint           `json:"user_id" gorm:"not null;uniqueIndex:uq_user_module"`
 	User        User           `json:"-"` // GORM association
 	ModuleID    uint           `json:"module_id" gorm:"not null;uniqueIndex:uq_user_module"`

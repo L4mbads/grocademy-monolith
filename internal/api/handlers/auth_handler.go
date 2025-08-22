@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	_ "grocademy/internal/db/models"
 	"grocademy/internal/services" // Assuming services package contains AuthServicer
 
 	"github.com/gin-gonic/gin"
@@ -55,7 +56,7 @@ func NewAuthHandler(authService services.AuthServicer) *AuthHandler {
 // @Failure 400 {object} map[string]string "error: Invalid input"
 // @Failure 409 {object} map[string]string "error: Username or email already taken"
 // @Failure 500 {object} map[string]string "error: Internal server error"
-// @Router /register [post]
+// @Router /auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -100,7 +101,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 // @Failure 400 {object} map[string]string "error: Invalid input"
 // @Failure 401 {object} map[string]string "error: Invalid credentials"
 // @Failure 500 {object} map[string]string "error: Internal server error"
-// @Router /login [post]
+// @Router /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -142,6 +143,15 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 }
 
+// Self godoc
+// @Summary Get current user
+// @Description Get currently logged-in user, based on token
+// @Tags auth
+// @Produce json
+// @Success 200 {object} models.User "User"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Security Bearer
+// @Router /auth/self [get]
 func (h *AuthHandler) Self(c *gin.Context) {
 	username, _ := c.Get("username")
 	user, err := h.AuthService.GetCurrentUser(fmt.Sprint(username))

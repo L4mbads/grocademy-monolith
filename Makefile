@@ -2,6 +2,9 @@ COMPOSE_FILE := build/docker-compose.yaml
 DEV_COMPOSE_FILE := build/docker-compose.dev.yaml
 ENV_FILE := .env
 
+docs:
+	swag init -g ./cmd/grocademy/main.go -o ./api --parseDependency
+
 run:
 	docker compose -f $(COMPOSE_FILE) --env-file $(ENV_FILE) up
 

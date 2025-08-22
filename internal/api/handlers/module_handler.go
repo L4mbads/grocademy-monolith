@@ -66,6 +66,7 @@ func NewModuleHandler(moduleService services.ModuleServicer) *ModuleHandler {
 // @Failure 400 {object} map[string]string "Invalid input"
 // @Failure 404 {object} map[string]string "Course not found"
 // @Failure 500 {object} map[string]string "Internal server error"
+// @Security Bearer
 // @Router /courses/{courseId}/modules [post]
 func (h *ModuleHandler) CreateModule(c *gin.Context) {
 	courseIDStr := c.Param("id")
@@ -113,9 +114,10 @@ func (h *ModuleHandler) CreateModule(c *gin.Context) {
 // @Param page query int false "Page number (default 1)"
 // @Param limit query int false "Items per page (default 10)"
 // @Param q query string false "Search query"
-// @Success 200 {object} pagination.PaginatedResponse{data=[]models.Module}
+// @Success 200 {object} []models.Module
 // @Failure 400 {object} map[string]string "Invalid input"
 // @Failure 500 {object} map[string]string "Internal server error"
+// @Security Bearer
 // @Router /courses/{courseId}/modules [get]
 func (h *ModuleHandler) GetAllModulesByCourseID(c *gin.Context) {
 	courseIDStr := c.Param("id")
@@ -182,6 +184,7 @@ func (h *ModuleHandler) GetAllModulesByCourseID(c *gin.Context) {
 // @Failure 400 {object} map[string]string "Invalid module ID"
 // @Failure 404 {object} map[string]string "Module not found"
 // @Failure 500 {object} map[string]string "Internal server error"
+// @Security Bearer
 // @Router /modules/{id} [get]
 func (h *ModuleHandler) GetModuleByID(c *gin.Context) {
 	idStr := c.Param("id")
@@ -241,6 +244,7 @@ func (h *ModuleHandler) GetModuleByID(c *gin.Context) {
 // @Failure 400 {object} map[string]string "Invalid input or no fields to update"
 // @Failure 404 {object} map[string]string "Module not found"
 // @Failure 500 {object} map[string]string "Internal server error"
+// @Security Bearer
 // @Router /modules/{id} [put]
 func (h *ModuleHandler) UpdateModule(c *gin.Context) {
 	idStr := c.Param("id")
@@ -304,6 +308,7 @@ func (h *ModuleHandler) UpdateModule(c *gin.Context) {
 // @Failure 400 {object} map[string]string "Invalid module ID"
 // @Failure 404 {object} map[string]string "Module not found"
 // @Failure 500 {object} map[string]string "Internal server error"
+// @Security Bearer
 // @Router /modules/{id} [delete]
 func (h *ModuleHandler) DeleteModule(c *gin.Context) {
 	idStr := c.Param("id")
@@ -336,6 +341,7 @@ func (h *ModuleHandler) DeleteModule(c *gin.Context) {
 // @Success 200 {object} map[string]string "message: Modules reordered successfully"
 // @Failure 400 {object} map[string]string "Invalid input or modules not belonging to course"
 // @Failure 500 {object} map[string]string "Internal server error"
+// @Security Bearer
 // @Router /courses/{courseId}/modules/reorder [patch]
 func (h *ModuleHandler) ReorderModules(c *gin.Context) {
 	courseIDStr := c.Param("id")
