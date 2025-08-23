@@ -143,7 +143,7 @@ func (h *ModuleHandler) GetAllModulesByCourseID(c *gin.Context) {
 
 	userID, _ := c.Get("id")
 
-	paginatedModules, progressMap, pagination, err := h.ModuleService.GetAllModulesByCourseID(uint(courseID), userID.(uint), int64(page), int64(limit), "")
+	title, paginatedModules, progressMap, pagination, err := h.ModuleService.GetAllModulesByCourseID(uint(courseID), userID.(uint), int64(page), int64(limit), "")
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("failed to retrieve modules: %v", err))
 		return
@@ -168,7 +168,7 @@ func (h *ModuleHandler) GetAllModulesByCourseID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":     "success",
-		"message":    "Modules queried",
+		"message":    title + " modules queried",
 		"data":       enrichedModules,
 		"pagination": pagination,
 	})

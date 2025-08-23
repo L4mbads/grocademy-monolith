@@ -21,7 +21,7 @@ import (
 type ModuleServicer interface {
 	CreateModule(courseID uint, title, description string, pdf *multipart.FileHeader, video *multipart.FileHeader) (*models.Module, error)
 	GetModuleByID(id uint, userID uint) (*models.Module, bool, error)
-	GetAllModulesByCourseID(courseID uint, userID uint, page, limit int64, query string) (*[]models.Module, *map[uint]bool, pagination.Pagination, error)
+	GetAllModulesByCourseID(courseID uint, userID uint, page, limit int64, query string) (string, *[]models.Module, *map[uint]bool, pagination.Pagination, error)
 	UpdateModule(id uint, updates map[string]interface{}, pdf *multipart.FileHeader, video *multipart.FileHeader) (*models.Module, error)
 	DeleteModule(id uint) error
 	ReorderModules(courseID uint, moduleOrders []models.Module) error // Expects a slice of Module with ID and Order
@@ -119,7 +119,7 @@ func (s *ModuleService) GetModuleByID(id uint, userID uint) (*models.Module, boo
 }
 
 // GetAllModulesByCourseID retrieves all modules for a specific course with pagination and search.
-func (s *ModuleService) GetAllModulesByCourseID(courseID uint, userID uint, page, limit int64, query string) (*[]models.Module, *map[uint]bool, pagination.Pagination, error) {
+func (s *ModuleService) GetAllModulesByCourseID(courseID uint, userID uint, page, limit int64, query string) (string, *[]models.Module, *map[uint]bool, pagination.Pagination, error) {
 	var modules []models.Module
 	searchableColumns := []string{"title", "description"} // Columns to search within modules
 
@@ -148,9 +148,12 @@ func (s *ModuleService) GetAllModulesByCourseID(courseID uint, userID uint, page
 	}
 
 	if err != nil {
-		return nil, &progressMap, pagination, err
+		return "", nil, &progressMap, pagination, err
 	}
-	return assertedModules, &progressMap, pagination, nil
+
+	var courseTitle string
+	s.DB.Model(&models.Course{}).Select("courses.title").Where("id = ?", courseID).Find(&courseTitle)
+	return courseTitle, assertedModules, &progressMap, pagination, nil
 }
 
 // UpdateModule updates an existing module, handling partial updates and optional file updates.

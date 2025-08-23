@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+    name="description"
+    content="Grocademy web monolith.">
+    <title>Browse Courses</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles/style.css">
+    <script src="/static/scripts/browser.js"></script>
+</head>
+<body>
+    {{ template "components/navbar.html" . }}
+
+    <!-- Page Content -->
+    <main class="content">
+        <div class="container browser">
+            <h1>Course Module</h1>
+            <div class="course-modules-container">
+                <!-- Course Detail + Progress -->
+                <div class="course-header">
+                  <h1 id="course-title" class="course-title">Course Title</h1>
+                  <div class="progress-container">
+                    <div class="progress-bar">
+                      <div class="progress-fill" style="width: 40%;"></div>
+                    </div>
+                    <span class="progress-text">40% Complete</span>
+                  </div>
+                </div>
+
+                <!-- Modules List -->
+                <div id="modules-container" class="modules-grid">
+                </div>
+              </div>
+                          <!-- Pagination -->
+            <div class="pagination">
+                <button id="prevBtn" onclick="changePage(-1);queryCourse()">Prev</button>
+                <span id="pageInfo"></span>
+                <button id="nextBtn" onclick="changePage(1);queryCourse()">Next</button>
+
+                <label for="limitSelect">Per Page:</label>
+                <select id="limitSelect" onchange="changeLimit();queryCourse()">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="15" selected>15</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+        </div>
+    </main>
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        const courseId = getCourseIdFromUrl();
+        const container = document.getElementById("modules-container");
+        const courseTitle = document.getElementById("course-title");
+
+        try {
+          const res = await fetch(`/api/courses/${courseId}/modules`);
+          const body = await res.json();
+
+          courseTitle.textContent = body.message.split(" ")[0];
+
+          if (body.status !== "success" || !body.data) {
+            container.innerHTML = `<p class="form-message error">Failed to load modules: ${body.message}</p>`;
+            return;
+          }
+
+          // Sort modules by "order"
+          const modules = body.data.sort((a, b) => a.order - b.order);
+
+          // Render each module as a card
+          modules.forEach((mod) => {
+                  // <div class="module-card">
+                  // </div>
+            const card = document.createElement("div");
+            card.className = "module-card"
+
+            const title = document.createElement("h2");
+            title.textContent = mod.title;
+            title.className = "module-title"
+            card.appendChild(title)
+
+            const description = document.createElement("p");
+            title.textContent = mod.description;
+            title.className = "module-description"
+            card.appendChild(title)
+
+            const actions = document.createElement("div");
+            actions.className = "module-actions"
+            card.appendChild(actions)
+
+            const pdf = document.createElement("a");
+            pdf.href = mod.pdf_content;
+            pdf.download = "pdf";
+            pdf.className = "btn"
+            pdf.innerText = "Download PDF"
+            actions.appendChild(pdf)
+
+            const video = document.createElement("a");
+            video.href = mod.video_content;
+            video.download = "video";
+            video.className = "btn"
+            video.innerText = "Download Video"
+            actions.appendChild(video)
+
+            const actionButton = document.createElement("button")
+            actionButton.className = "btn complete-btn";
+            actionButton.innerText = mod.is_completed ? "Completed" : "Mark Complete";
+            actionButton.dataset.id = mod.id
+            actions.appendChild(actionButton)
+
+            container.appendChild(card);
+          });
+
+          // Event listener for marking module complete
+          container.addEventListener("click", async (e) => {
+            if (e.target.classList.contains("complete-btn")) {
+              const moduleId = e.target.dataset.id;
+
+              try {
+                const res = await fetch(`/api/modules/${moduleId}/complete`, {
+                  method: "POST",
+                });
+                const result = await res.json();
+
+                if (result.status === "success") {
+                  e.target.textContent = "Completed";
+                  e.target.disabled = true;
+                  e.target.classList.remove("bg-indigo-500");
+                  e.target.classList.add("bg-gray-400");
+                } else {
+                  alert("Failed: " + result.message);
+                }
+              } catch (err) {
+                console.error(err);
+                alert("Error completing module");
+              }
+            }
+          });
+        } catch (err) {
+          console.error("Fetch error:", err);
+          container.innerHTML = `<p class="text-red-500">Error loading modules</p>`;
+        }
+      });
+
+      // Example helper: get course ID from URL
+      function getCourseIdFromUrl() {
+        const parts = window.location.pathname.split("/");
+        return parts[2]; // e.g. /courses/:id/modules
+      }
+      </script>
+</body>
+</html>

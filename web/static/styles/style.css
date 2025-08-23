@@ -454,3 +454,96 @@
     font-size: 1.5rem;
   }
 }
+
+.course-modules-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.course-header {
+  margin-bottom: 30px;
+}
+
+.course-title {
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+}
+
+.progress-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 12px;
+  background: #eee;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #4caf50;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.modules-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+.module-card {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 15px;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.module-title {
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+}
+
+.module-description {
+  margin-bottom: 12px;
+  color: #444;
+}
+
+.module-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.btn {
+  background: #007bff;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  text-decoration: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btn:hover {
+  background: #0056b3;
+}
+
+.complete-btn {
+  background: #28a745;
+}
+
+.complete-btn:hover {
+  background: #1e7e34;
+}
