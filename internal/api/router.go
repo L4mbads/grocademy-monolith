@@ -128,9 +128,11 @@ func NewRouter(
 		{
 			courses.POST("", courseHandler.CreateCourse)
 			courses.GET("", courseHandler.GetAllCourses)
+			courses.GET("/my-courses", courseHandler.GetMyCourses)
 			courses.GET("/:id", courseHandler.GetCourseByID)
 			courses.PUT("/:id", courseHandler.UpdateCourse)
 			courses.DELETE("/:id", courseHandler.DeleteCourse)
+			courses.POST("/:id/buy", courseHandler.BuyCourse)
 
 			modulesByCourse := courses.Group("/:id/modules")
 			{

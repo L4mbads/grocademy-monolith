@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS enrollments (
-    id SERIAL PRIMARY KEY,
+    transaction_id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
     course_id INT NOT NULL,
-    purchase_date TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    purchased_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMPTZ,
@@ -10,4 +10,4 @@ CREATE TABLE IF NOT EXISTS enrollments (
     CONSTRAINT fk_enrollments_course FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
 );
 
-CREATE UNIQUE INDEX uq_user_course ON enrollments (user_id, course_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_user_course ON enrollments (user_id, course_id);

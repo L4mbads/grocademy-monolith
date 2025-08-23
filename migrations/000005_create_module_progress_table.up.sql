@@ -11,4 +11,4 @@ CREATE TABLE IF NOT EXISTS module_progresses (
     CONSTRAINT fk_module_progresses_module FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE
 );
 
-CREATE UNIQUE INDEX uq_user_module ON module_progresses (user_id, module_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_user_module ON module_progresses (user_id, module_id);

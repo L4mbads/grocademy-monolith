@@ -51,9 +51,25 @@
 
                 const btn = document.createElement("button");
                 btn.textContent = "View Details";
-                btn.onclick = () => {
-                    window.location.href = `/course/${course.id}`;
+                btn.onclick = async () => {
+    try {
+      const res = await fetch("/api/courses/1/buy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        alert("not ok")
+        return;
+      }
+
+    } catch (err) {
+        alert("error")
+    }
                 };
+
                 cardDetail.appendChild(btn);
 
                 container.appendChild(card);
@@ -65,7 +81,7 @@
                 document.getElementById("prevBtn").disabled = currentPage === 1;
                 document.getElementById("nextBtn").disabled = currentPage === totalPages;
             } else {
-                container.innerHTML = `<p>${data.message || "No courses found"}</p>`;
+                container.innerHTML = `<p>${"No courses found"}</p>`;
             }
 
         }

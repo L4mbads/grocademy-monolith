@@ -174,6 +174,88 @@ func (h *CourseHandler) GetAllCourses(c *gin.Context) {
 	})
 }
 
+// GetMyCourses godoc (NEW HANDLER)
+// @Summary Get all courses with pagination and search
+// @Description Retrieve a list of all courses with optional pagination and search parameters
+// @Tags courses
+// @Produce  json
+// @Param page query int false "Page number (default 1)"
+// @Param limit query int false "Items per page (default 10)"
+// @Param q query string false "Search query"
+// @Success 200 {object} []models.Course
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Security Bearer
+// @Router /courses [get]
+func (h *CourseHandler) GetMyCourses(c *gin.Context) {
+	pageStr := c.DefaultQuery("page", "1")
+	limitStr := c.DefaultQuery("limit", "10")
+	// query := c.DefaultQuery("q", "")
+
+	page, err := strconv.ParseInt(pageStr, 10, 64)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, errors.New("invalid page number"))
+		return
+	}
+	limit, err := strconv.ParseInt(limitStr, 10, 64)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, errors.New("invalid limit number"))
+		return
+	}
+
+	userID, _ := c.Get("id")
+
+	paginatedCourses, pagination, err := h.CourseService.GetMyCourses(userID.(uint), int64(page), int64(limit))
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":     "success",
+		"message":    "Query success",
+		"data":       paginatedCourses,
+		"pagination": pagination,
+	})
+}
+
+// BuyCourse godoc
+// @Summary Get all courses with pagination and search
+// @Description Retrieve a list of all courses with optional pagination and search parameters
+// @Tags courses
+// @Produce  json
+// @Param page query int false "Page number (default 1)"
+// @Param limit query int false "Items per page (default 10)"
+// @Param q query string false "Search query"
+// @Success 200 {object} []models.Course
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Security Bearer
+// @Router /courses [get]
+func (h *CourseHandler) BuyCourse(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, errors.New("invalid course ID"))
+		return
+	}
+	userID, _ := c.Get("id")
+
+	balance, transactionID, err := h.CourseService.BuyCourse(userID.(uint), uint(id))
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "Query success",
+		"data": gin.H{
+			"course_id":      id,
+			"user_balance":   balance,
+			"transaction_id": transactionID,
+		},
+	})
+}
+
 // UpdateCourse godoc (NEW HANDLER)
 // @Summary Update a course's data
 // @Description Update specified fields of a course by ID, with optional thumbnail upload
