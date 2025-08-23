@@ -206,15 +206,16 @@ func (s *CourseService) GetMyCourses(userID uint, page, limit int64) (*[]dto.MyC
 	s.DB.Model(&models.Enrollment{}).Where("user_id = ?", userID).Count(&totalItems)
 
 	// Build the main query for enrolled courses, joining with `enrollments` table.
-	query := s.DB.Model(&models.Course{}).
-		Select("courses.*, enrollments.created_at as purchased_at").
+	s.DB.Model(&models.Course{}).
+		Select("courses.*, enrollments.*").
 		Joins("INNER JOIN enrollments ON enrollments.course_id = courses.id").
-		Where("enrollments.user_id = ?", userID)
+		Where("enrollments.user_id = ?", userID).
+		Find(&results)
 
-	_, pagination, err := pagination.Paginate(query, &results, page, limit, nil, "")
-	if err != nil {
-		return nil, pagination, fmt.Errorf("failed to paginate user's courses: %w", err)
-	}
+	// _, pagination, err := pagination.Paginate(query, &results, page, limit, nil, "")
+	// if err != nil {
+	// 	return nil, pagination, fmt.Errorf("failed to paginate user's courses: %w", err)
+	// }
 
 	// var myCourses []map[string]interface{}
 	myCourses := []dto.MyCourseResponse{}
@@ -254,7 +255,9 @@ func (s *CourseService) GetMyCourses(userID uint, page, limit int64) (*[]dto.MyC
 			ProgressPercentage: progressPercentage,
 		})
 	}
+	pagination := pagination.Pagination{}
 
+	pagination.CurrentPage = page
 	pagination.TotalItems = totalItems
 	pagination.TotalPages = int64(totalItems / limit)
 	if totalItems%limit != 0 {

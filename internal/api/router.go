@@ -53,7 +53,8 @@ func NewRouter(
 		"web/templates/components/navbar.html",
 		"web/templates/layout.html",
 		"web/templates/dashboard.html",
-		"web/templates/browse_course.html",
+		"web/templates/browse_courses.html",
+		"web/templates/my_courses.html",
 		"web/templates/course.html",
 		"web/templates/register.html",
 		"web/templates/login.html")
@@ -83,7 +84,10 @@ func NewRouter(
 			c.HTML(http.StatusOK, "dashboard.html", gin.H{})
 		})
 		authenticatedWeb.GET("/courses", func(c *gin.Context) {
-			c.HTML(http.StatusOK, "browse_course.html", gin.H{})
+			c.HTML(http.StatusOK, "browse_courses.html", gin.H{})
+		})
+		authenticatedWeb.GET("/my-courses", func(c *gin.Context) {
+			c.HTML(http.StatusOK, "my_courses.html", gin.H{})
 		})
 		authenticatedWeb.GET("/courses/:id", func(c *gin.Context) {
 			c.HTML(http.StatusOK, "course.html", gin.H{})
