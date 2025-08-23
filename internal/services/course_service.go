@@ -19,7 +19,7 @@ import (
 
 type CourseServicer interface {
 	CreateCourse(title, description, instructor string, topics []string, price float64, thumbnail *multipart.FileHeader) (*models.Course, error)
-	GetCourseByID(id uint) (*models.Course, int64, error)
+	GetCourseByID(userID, courseID uint) (*models.Course, int64, bool, error)
 	GetMyCourses(userID uint, page, limit int64) (*[]dto.MyCourseResponse, pagination.Pagination, error)
 	GetAllCoursesPaginated(page, limit int64, query string) (*[]map[string]interface{}, pagination.Pagination, error)
 	UpdateCourse(id uint, updates map[string]interface{}, thumbnail *multipart.FileHeader) (*models.Course, error)
@@ -91,19 +91,25 @@ func (s *CourseService) CreateCourse(
 	return &course, nil
 }
 
-func (s *CourseService) GetCourseByID(id uint) (*models.Course, int64, error) {
+func (s *CourseService) GetCourseByID(userID, courseID uint) (*models.Course, int64, bool, error) {
 	var course models.Course
-	result := s.DB.First(&course, id)
+	result := s.DB.First(&course, courseID)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, 0, errors.New("course not found")
+			return nil, 0, false, errors.New("course not found")
 		}
-		return nil, 0, fmt.Errorf("database error finding course: %w", result.Error)
+		return nil, 0, false, fmt.Errorf("database error finding course: %w", result.Error)
 	}
 	var totalModules int64
-	s.DB.Model(&models.Module{}).Where("course_id = ?", id).Count(&totalModules)
+	s.DB.Model(&models.Module{}).Where("course_id = ?", courseID).Count(&totalModules)
 
-	return &course, totalModules, nil
+	var purchased bool
+	err := s.DB.Model(&models.Enrollment{}).Select("count(*) > 0").Where("user_id = ? AND course_id = ?", userID, courseID).Find(&purchased).Error
+	if err != nil {
+		return nil, 0, false, err
+	}
+
+	return &course, totalModules, purchased, nil
 }
 
 func (s *CourseService) GetAllCoursesPaginated(page, limit int64, query string) (*[]map[string]interface{}, pagination.Pagination, error) {

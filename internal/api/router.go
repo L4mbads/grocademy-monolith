@@ -54,6 +54,7 @@ func NewRouter(
 		"web/templates/layout.html",
 		"web/templates/dashboard.html",
 		"web/templates/browse_course.html",
+		"web/templates/course.html",
 		"web/templates/register.html",
 		"web/templates/login.html")
 	r.Static("/static", "./web/static")
@@ -83,6 +84,9 @@ func NewRouter(
 		})
 		authenticatedWeb.GET("/courses", func(c *gin.Context) {
 			c.HTML(http.StatusOK, "browse_course.html", gin.H{})
+		})
+		authenticatedWeb.GET("/courses/:id", func(c *gin.Context) {
+			c.HTML(http.StatusOK, "course.html", gin.H{})
 		})
 	}
 

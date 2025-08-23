@@ -51,23 +51,8 @@
 
                 const btn = document.createElement("button");
                 btn.textContent = "View Details";
-                btn.onclick = async () => {
-    try {
-      const res = await fetch("/api/courses/1/buy", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      const result = await res.json();
-
-      if (!res.ok) {
-        alert("not ok")
-        return;
-      }
-
-    } catch (err) {
-        alert("error")
-    }
+                btn.onclick = () => {
+                    window.location.href = `/courses/${course.id}`;
                 };
 
                 cardDetail.appendChild(btn);
@@ -120,7 +105,7 @@
 
     <!-- Page Content -->
     <main class="content">
-        <div class="container">
+        <div class="container browser">
             <h1>Browse Courses</h1>
 
             <!-- Search Bar -->

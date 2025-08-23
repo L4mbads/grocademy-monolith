@@ -117,6 +117,11 @@
     color: red;
   }
 
+.login, .register {
+  max-width: 400px;
+  padding: 1.2rem;
+}
+
 /* Navbar */
 .navbar {
   background: var(--blue);
@@ -331,10 +336,118 @@
   }
 }
 
+@media (width >= 64rem) {
+  .course-card {
+    /* max-width: 600px; */
+    width: 100%;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+    margin: auto;
+    display: flex;
+  }
+
+  .course-thumbnail {
+    width: 100%;
+    max-height: 600px;
+    display: block;
+    object-fit: cover;
+  }
+
+  .course-info {
+    padding: 1.5rem;
+    display: flex;
+    flex-grow: 1;
+    flex-flow: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .course-detail {
+    flex-grow: 1;
+  }
+}
+
+.course-detail {
+  display: grid;
+  grid-template-columns: 150px 1fr; /* label column + value column */
+  gap: 8px 20px; /* row gap, column gap */
+  margin-bottom: 20px;
+  place-content: center;
+}
+
+.course-detail-container {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.course-card {
+  width: 100%;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  overflow: hidden;
+  margin: auto;
+}
+
+.course-thumbnail {
+  width: 100%;
+  max-height: 600px;
+  display: block;
+  object-fit: cover;
+}
+
+.course-info {
+  padding: 1.5rem;
+}
+
+.course-info h1 {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.course-info p {
+  margin: 0.3rem 0;
+  color: #333;
+}
+
+.label {
+  font-weight: bold;
+  color: #333;
+}
+
+.value {
+  color: #555;
+}
+
+.btn-primary {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  background: #1d4ed8; /* blue */
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
+}
+
+.form-message {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #d97706; /* yellow-ish for feedback */
+}
+
 @media (max-width: 480px) {
-  .container {
+  .browser {
     padding: 0px;
-    border-radius: 0.75rem;
   }
 
   h1 {

@@ -16,7 +16,8 @@ import (
 
 type CourseResponse struct {
 	models.Course
-	TotalModules int64 `json:"total_modules"` // NEW
+	TotalModules int64 `json:"total_modules"`
+	Purchased    bool  `json:"purchased"`
 }
 
 type CreateCourseRequest struct {
@@ -110,7 +111,9 @@ func (h *CourseHandler) GetCourseByID(c *gin.Context) {
 		return
 	}
 
-	course, totalModules, err := h.CourseService.GetCourseByID(uint(id))
+	userID, _ := c.Get("id")
+
+	course, totalModules, purchased, err := h.CourseService.GetCourseByID(userID.(uint), uint(id))
 	if err != nil {
 		if err.Error() == "course not found" {
 			c.AbortWithError(http.StatusNotFound, err)
@@ -123,6 +126,7 @@ func (h *CourseHandler) GetCourseByID(c *gin.Context) {
 	response := CourseResponse{
 		Course:       *course,
 		TotalModules: totalModules,
+		Purchased:    purchased,
 	}
 
 	c.JSON(http.StatusOK, gin.H{
