@@ -1,0 +1,23 @@
+{{ define "components/navbar.html"}}
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-title">
+        <picture>
+            <source srcset="/static/logo.webp" type="image/webp">
+            <source srcset="/static/logo.jpg" type="image/jpeg">
+            <img src="/static/logo.jpg" alt="Grocademy logo" width="64" height="64">
+        </picture>
+        Grocademy
+    </div>
+
+      <button class="nav-toggle" id="nav-toggle">☰</button>
+      <div class="nav-links" id="nav-links">
+        <a href="/dashboard">Dashboard</a>
+        <a href="/my-course">My Course</a>
+        <a href="/courses">Browse Course</a>
+      </div>
+    </div>
+  </nav>
+  <script src="/static/scripts/navbar.js"></script>
+{{ end }}

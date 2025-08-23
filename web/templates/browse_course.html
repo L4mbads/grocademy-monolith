@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+    name="description"
+    content="Grocademy web monolith.">
+    <title>Browse Courses</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles/style.css">
+    <script src="/static/scripts/browser.js"></script>
+    <script>
+        const route = "api/courses";
+        async function queryCourse() {
+            const data = await query(route)
+            const container = document.getElementById("coursesContainer");
+            container.innerHTML = "";
+
+            if (data.status === "success" && data.data) {
+                data.data.forEach(course => {
+                const card = document.createElement("div");
+                card.className = "card";
+
+                const img = document.createElement("img");
+                img.src = course.thumbnail_image || "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/No-Image-Placeholder-landscape.svg/768px-No-Image-Placeholder-landscape.svg.png";
+                card.appendChild(img);
+
+                const cardDetail = document.createElement("div");
+                cardDetail.className = "card-detail";
+                card.appendChild(cardDetail)
+
+                const title = document.createElement("h3");
+                title.textContent = course.title;
+                cardDetail.appendChild(title);
+
+                const instructor = document.createElement("p");
+                instructor.textContent = "Instructor: " + course.instructor;
+                cardDetail.appendChild(instructor);
+
+                const desc = document.createElement("p");
+                desc.textContent = course.description;
+                cardDetail.appendChild(desc);
+
+                const price = document.createElement("div");
+                price.className = "price";
+                price.textContent = course.price > 0 ? "$" + course.price : "Free";
+                cardDetail.appendChild(price);
+
+                const btn = document.createElement("button");
+                btn.textContent = "View Details";
+                btn.onclick = () => {
+                    window.location.href = `/course/${course.id}`;
+                };
+                cardDetail.appendChild(btn);
+
+                container.appendChild(card);
+                });
+
+                // update pagination
+                totalPages = data.pagination.total_pages;
+                document.getElementById("pageInfo").textContent = `Page ${data.pagination.current_page} of ${totalPages}`;
+                document.getElementById("prevBtn").disabled = currentPage === 1;
+                document.getElementById("nextBtn").disabled = currentPage === totalPages;
+            } else {
+                container.innerHTML = `<p>${data.message || "No courses found"}</p>`;
+            }
+
+        }
+
+        // function startLongPolling() {
+        //     fetch('/api/updates') // Endpoint for long polling on the server
+        //         .then(response => response.json())
+        //         .then(data => {
+        //         // Process the received data and update the UI
+        //         console.log('New data received:', data);
+        //         // Immediately initiate a new long polling request
+        //         startLongPolling();
+        //         })
+        //         .catch(error => {
+        //         console.error('Long polling error:', error);
+        //         // Implement retry logic or backoff strategies if needed
+        //         setTimeout(startLongPolling, 5000); // Retry after 5 seconds
+        //         });
+        //     }
+
+        // document.addEventListener('DOMContentLoaded', startLongPolling);
+        document.addEventListener('DOMContentLoaded', queryCourse);
+
+        function handleSearchInput(e){
+            if(e.keyCode === 13){
+                e.preventDefault();
+                search();
+                queryCourse();
+            }
+        }
+
+    </script>
+</head>
+<body>
+    {{ template "components/navbar.html" . }}
+
+    <!-- Page Content -->
+    <main class="content">
+        <div class="container">
+            <h1>Browse Courses</h1>
+
+            <!-- Search Bar -->
+            <div class="search-bar">
+                <input type="text" id="searchInput" onkeypress="handleSearchInput(event)" placeholder="Search courses...">
+                <button id="searchButton" onclick="search();queryCourse()">Search</button>
+            </div>
+
+            <!-- Courses Grid -->
+            <div id="coursesContainer" class="courses"></div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <button id="prevBtn" onclick="changePage(-1);queryCourse()">Prev</button>
+                <span id="pageInfo"></span>
+                <button id="nextBtn" onclick="changePage(1);queryCourse()">Next</button>
+
+                <label for="limitSelect">Per Page:</label>
+                <select id="limitSelect" onchange="changeLimit();queryCourse()">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="15" selected>15</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,45 +1,23 @@
-{{ define "layout.html" }}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta
-  name="description"
-  content="Grocademy web monolith.">
-  <title>{{ block "title" . }}{{ end }}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+    name="description"
+    content="Grocademy web monolith.">
+    <title>Title</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles/style.css">
 </head>
 <body>
-  <!-- Navbar -->
-  <nav class="navbar">
-    <div class="nav-container">
-      <div class="nav-title">
-        <picture>
-            <source srcset="/static/logo.webp" type="image/webp">
-            <source srcset="/static/logo.jpg" type="image/jpeg">
-            <img src="/static/logo.jpg" alt="Grocademy logo" width="64" height="64">
-        </picture>
-        Grocademy
-    </div>
-      <button class="nav-toggle" id="nav-toggle">☰</button>
-      <div class="nav-links" id="nav-links">
-        <a href="/dashboard">Dashboard</a>
-        <a href="/my-course">My Course</a>
-        <a href="/courses">Browse Course</a>
-      </div>
-    </div>
-  </nav>
+    {{ template "components/navbar.html" . }}
 
-  <!-- Page Content -->
-  <main class="content">
-    {{ block "content" . }}{{ end }}
-  </main>
+    <!-- Page Content -->
+    <main class="content">
+    </main>
 
-  <script src="/static/script.js"></script>
 </body>
 </html>
-{{ end }}

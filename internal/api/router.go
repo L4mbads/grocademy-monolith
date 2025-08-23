@@ -50,8 +50,10 @@ func NewRouter(
 	// r.LoadHTMLGlob("web/templates/components/*.html")
 	// r.LoadHTMLGlob("web/templates/*.html")
 	r.LoadHTMLFiles(
+		"web/templates/components/navbar.html",
 		"web/templates/layout.html",
 		"web/templates/dashboard.html",
+		"web/templates/browse_course.html",
 		"web/templates/register.html",
 		"web/templates/login.html")
 	r.Static("/static", "./web/static")
@@ -78,6 +80,9 @@ func NewRouter(
 		})
 		authenticatedWeb.GET("/dashboard", func(c *gin.Context) {
 			c.HTML(http.StatusOK, "dashboard.html", gin.H{})
+		})
+		authenticatedWeb.GET("/courses", func(c *gin.Context) {
+			c.HTML(http.StatusOK, "browse_course.html", gin.H{})
 		})
 	}
 

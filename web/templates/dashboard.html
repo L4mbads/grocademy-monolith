@@ -1,16 +1,32 @@
-{{ define "title" }}Dashboard{{ end }}
-{{ template "layout.html" . }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+    name="description"
+    content="Grocademy user dashboard.">
+    <title>Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles/style.css">
+    <script src="/static/scripts/auth.js"></script>
+</head>
+<body>
+    {{ template "components/navbar.html" . }}
+    <main class="content">
+        <div class="dashboard">
+        <h1>Welcome, <span id="user-name">Loading...</span></h1>
 
-{{ define "content" }}
-<div class="dashboard">
-  <h1>Welcome, <span id="user-name">Loading...</span></h1>
-
-  <div class="user-card">
-    <p><strong>Username:</strong> <span id="user-username">-</span></p>
-    <p><strong>Email:</strong> <span id="user-email">-</span></p>
-    <p><strong>First Name:</strong> <span id="user-firstname">-</span></p>
-    <p><strong>Last Name:</strong> <span id="user-lastname">-</span></p>
-    <p><strong>Balance:</strong> $<span id="user-balance">0</span></p>
-    <p><strong>Joined:</strong> <span id="user-created">-</span></p>
-</div>
-{{ end }}
+        <div class="user-card">
+            <p><strong>Username:</strong> <span id="user-username">-</span></p>
+            <p><strong>Email:</strong> <span id="user-email">-</span></p>
+            <p><strong>First Name:</strong> <span id="user-firstname">-</span></p>
+            <p><strong>Last Name:</strong> <span id="user-lastname">-</span></p>
+            <p><strong>Balance:</strong> $<span id="user-balance">0</span></p>
+            <p><strong>Joined:</strong> <span id="user-created">-</span></p>
+        </div>
+    </main>
+</body>
+</html>
