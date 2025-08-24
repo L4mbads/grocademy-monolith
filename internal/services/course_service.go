@@ -19,7 +19,7 @@ import (
 type CourseServicer interface {
 	CreateCourse(title, description, instructor string, topics []string, price float64, thumbnail *multipart.FileHeader) (*models.Course, error)
 	GetCourseByID(userID, courseID uint) (*models.Course, int64, bool, error)
-	GetMyCourses(userID uint, page, limit int64) (*[]dto.MyCourseResponse, pagination.Pagination, error)
+	GetMyCourses(userID uint, page, limit int64, query string) (*[]dto.MyCourseResponse, pagination.Pagination, error)
 	GetAllCoursesPaginated(page, limit int64, query string) (*[]map[string]interface{}, pagination.Pagination, error)
 	UpdateCourse(id uint, updates map[string]interface{}, thumbnail *multipart.FileHeader) (*models.Course, error)
 	DeleteCourse(id uint) error
@@ -90,25 +90,6 @@ func (s *CourseService) GetCourseByID(userID, courseID uint) (*models.Course, in
 }
 
 func (s *CourseService) GetAllCoursesPaginated(page, limit int64, query string) (*[]map[string]interface{}, pagination.Pagination, error) {
-	// var courses []models.Course
-	// searchableColumns := []string{"title", "instructor", "topics"}
-
-	// filteredCourses, pagination, err := pagination.Paginate(
-	// 	s.DB.Model(&models.Course{}),
-	// 	&courses,
-	// 	page,
-	// 	limit,
-	// 	searchableColumns,
-	// 	query,
-	// )
-
-	// assertedCourses, _ := filteredCourses.(*[]models.Course)
-
-	// if err != nil {
-	// 	return nil, pagination, err
-	// }
-	// return assertedCourses, pagination, nil
-	// A custom struct for the query result, including the module count.
 	var results []struct {
 		models.Course
 		TotalModules int64
@@ -123,7 +104,7 @@ func (s *CourseService) GetAllCoursesPaginated(page, limit int64, query string) 
 	// Apply search filtering
 	if query != "" {
 		searchQuery := ""
-		searchableColumns := []string{"title", "description", "instructor", "topics"}
+		searchableColumns := []string{"title", "instructor", "topics"}
 		args := make([]interface{}, len(searchableColumns))
 		for i, col := range searchableColumns {
 			if col == "topics" {
@@ -171,28 +152,49 @@ func (s *CourseService) GetAllCoursesPaginated(page, limit int64, query string) 
 	return &coursesWithCount, pagination, nil
 }
 
-func (s *CourseService) GetMyCourses(userID uint, page, limit int64) (*[]dto.MyCourseResponse, pagination.Pagination, error) {
+func (s *CourseService) GetMyCourses(userID uint, page, limit int64, query string) (*[]dto.MyCourseResponse, pagination.Pagination, error) {
 	// A custom struct to hold the data from our complex join query.
 	var results []struct {
 		models.Course
 		models.Enrollment
 	}
 
-	// First, count total enrolled courses for the pagination metadata.
-	var totalItems int64
-	s.DB.Model(&models.Enrollment{}).Where("user_id = ?", userID).Count(&totalItems)
-
-	// Build the main query for enrolled courses, joining with `enrollments` table.
-	s.DB.Model(&models.Course{}).
+	dbQuery := s.DB.Model(&models.Course{}).
 		Select("courses.*, enrollments.*").
 		Joins("INNER JOIN enrollments ON enrollments.course_id = courses.id").
-		Where("enrollments.user_id = ?", userID).
-		Find(&results)
+		Where("enrollments.user_id = ?", userID)
 
-	// _, pagination, err := pagination.Paginate(query, &results, page, limit, nil, "")
-	// if err != nil {
-	// 	return nil, pagination, fmt.Errorf("failed to paginate user's courses: %w", err)
-	// }
+	// Apply search filtering
+	if query != "" {
+		searchQuery := ""
+		searchableColumns := []string{"title", "instructor", "topics"}
+		args := make([]interface{}, len(searchableColumns))
+		for i, col := range searchableColumns {
+			if col == "topics" {
+				searchQuery += "EXISTS (SELECT 1 FROM unnest(courses.topics) AS t WHERE t ILIKE ?)"
+			} else {
+				searchQuery += fmt.Sprintf("courses.%s ILIKE ?", col)
+			}
+			if i < len(searchableColumns)-1 {
+				searchQuery += " OR "
+			}
+			args[i] = fmt.Sprintf("%%%s%%", query)
+		}
+		dbQuery = dbQuery.Where(searchQuery, args...)
+	}
+
+	// First, count total enrolled courses for the pagination metadata.
+	var totalItems int64
+	// s.DB.Model(&models.Enrollment{}).Where("user_id = ?", userID).Count(&totalItems)
+	dbQuery.Count(&totalItems)
+
+	// Build the main query for enrolled courses, joining with `enrollments` table.
+	// Find(&results)
+
+	_, pagination, err := pagination.Paginate(dbQuery, &results, page, limit, nil, "")
+	if err != nil {
+		return nil, pagination, fmt.Errorf("failed to paginate user's courses: %w", err)
+	}
 
 	// var myCourses []map[string]interface{}
 	myCourses := []dto.MyCourseResponse{}
@@ -214,25 +216,12 @@ func (s *CourseService) GetMyCourses(userID uint, page, limit int64) (*[]dto.MyC
 			progressPercentage = float64(completedModules) / float64(totalModules) * 100
 		}
 
-		// courseData := map[string]interface{}{
-		// 	"id":                  enrolledCourse.ID,
-		// 	"title":               enrolledCourse.Title,
-		// 	"description":         enrolledCourse.Description,
-		// 	"instructor":          enrolledCourse.Instructor,
-		// 	"topics":              enrolledCourse.Topics,
-		// 	"price":               enrolledCourse.Price,
-		// 	"thumbnail_image":     enrolledCourse.ThumbnailImage,
-		// 	"total_modules":       totalModules,
-		// 	"progress_percentage": progressPercentage,
-		// 	"purchased_at":        enrolledCourse.PurchaseDate,
-		// }
 		myCourses = append(myCourses, dto.MyCourseResponse{
 			Enrollment:         enrolledCourse.Enrollment,
 			Course:             enrolledCourse.Course,
 			ProgressPercentage: progressPercentage,
 		})
 	}
-	pagination := pagination.Pagination{}
 
 	pagination.CurrentPage = page
 	pagination.TotalItems = totalItems

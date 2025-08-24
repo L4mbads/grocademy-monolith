@@ -193,7 +193,7 @@ func (h *CourseHandler) GetAllCourses(c *gin.Context) {
 func (h *CourseHandler) GetMyCourses(c *gin.Context) {
 	pageStr := c.DefaultQuery("page", "1")
 	limitStr := c.DefaultQuery("limit", "10")
-	// query := c.DefaultQuery("q", "")
+	query := c.DefaultQuery("q", "")
 
 	page, err := strconv.ParseInt(pageStr, 10, 64)
 	if err != nil {
@@ -208,7 +208,7 @@ func (h *CourseHandler) GetMyCourses(c *gin.Context) {
 
 	userID, _ := c.Get("id")
 
-	paginatedCourses, pagination, err := h.CourseService.GetMyCourses(userID.(uint), int64(page), int64(limit))
+	paginatedCourses, pagination, err := h.CourseService.GetMyCourses(userID.(uint), int64(page), int64(limit), query)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
