@@ -467,7 +467,13 @@
 
 .course-title {
   font-size: 1.8rem;
-  margin-bottom: 10px;
+  margin-bottom: 3px;
+}
+
+.course-instructor {
+  text-align: center;
+  font-size: 1.2rem;
+  margin-bottom: 12px;
 }
 
 .progress-container {

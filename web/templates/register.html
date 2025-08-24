@@ -2,27 +2,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Register</title>
-  <link rel="stylesheet" href="/static/styles/style.css">
-  <script src="/static/scripts/auth.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+    name="description"
+    content="Grocademy register form.">
+    <title>Register</title>
+    <link rel="stylesheet" href="/static/styles/style.css">
+    <script src="/static/scripts/auth.js"></script>
 </head>
 <body>
-  <div class="container register">
-    <h1>Register</h1>
-    <form id="register-form">
-      <input type="text" name="name" placeholder="Full Name" required>
-      <input type="email" name="email" placeholder="Email" required>
-      <input type="password" name="password" placeholder="Password" required>
-      <input type="password" name="confirm_password" placeholder="Confirm Password" required>
-      <button type="submit">Create Account</button>
-    </form>
-    <div id="register-message" class="form-message"></div>
-    <div class="alt-action">
-      Already have an account? <a href="/login">Login</a>
+    <div class="container register">
+        <h1>Register</h1>
+        <form id="register-form">
+            <input type="text" name="name" placeholder="Full Name" required>
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+            <button type="submit">Create Account</button>
+        </form>
+        <div id="register-message" class="form-message"></div>
+        <div class="alt-action">
+            Already have an account? <a href="/login">Login</a>
+        </div>
     </div>
-  </div>
 </body>
 </html>
 {{ end }}

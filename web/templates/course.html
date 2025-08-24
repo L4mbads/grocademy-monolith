@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta
     name="description"
-    content="Grocademy web monolith.">
+    content="Grocademy course detail.">
     <title>Title</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,34 +14,39 @@
     <script src="/static/scripts/course.js"></script>
 </head>
 <body>
+
+    <!-- Navbar -->
     {{ template "components/navbar.html" . }}
 
     <!-- Page Content -->
     <main class="content">
-    <div id="course-card" class="course-card">
-      <div class="course-thumbnail-container">
-        <img id="thumbnail" src="" alt="Course Thumbnail" class="course-thumbnail">
-      </div>
-      <div class="course-info">
-        <h1 id="title"></h1>
-        <div class="course-detail">
-                <div class="label">Instructor:</div>
-                <p class="value" id="instructor"></p>
+        <div id="course-card" class="course-card">
 
-                <div class="label">Description:</div>
-                <p class="value" id="description"></p>
+            <!-- Course Thumbnail -->
+            <div class="course-thumbnail-container">
+                <img id="thumbnail" src="" alt="Course Thumbnail" class="course-thumbnail">
+            </div>
 
-                <div class="label">Topics:</div>
-                <p class="value" id="topics"></p>
+            <!-- Course Info -->
+            <div class="course-info">
+                <h1 id="title"></h1>
+                <div class="course-detail">
+                        <div class="label">Instructor:</div>
+                        <p class="value" id="instructor"></p>
 
-                <div class="label">Price:</div>
-                <p class="value" id="price"></p>
+                        <div class="label">Description:</div>
+                        <p class="value" id="description"></p>
+
+                        <div class="label">Topics:</div>
+                        <p class="value" id="topics"></p>
+
+                        <div class="label">Price:</div>
+                        <p class="value" id="price"></p>
+                </div>
+                <button id="actionButton" class="btn-primary"></button>
+                <p id="message" class="form-message"></p>
+            </div>
         </div>
-        <button id="actionButton" class="btn-primary"></button>
-        <p id="message" class="form-message"></p>
-      </div>
-    </div>
     </main>
-
 </body>
 </html>

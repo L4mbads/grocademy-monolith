@@ -147,7 +147,7 @@ func (h *ModuleHandler) GetAllModulesByCourseID(c *gin.Context) {
 
 	userID, _ := c.Get("id")
 
-	title, paginatedModules, progressMap, pagination, err := h.ModuleService.GetAllModulesByCourseID(uint(courseID), userID.(uint), int64(page), int64(limit), "")
+	paginatedModules, progressMap, pagination, err := h.ModuleService.GetAllModulesByCourseID(uint(courseID), userID.(uint), int64(page), int64(limit), "")
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("failed to retrieve modules: %v", err))
 		return
@@ -172,7 +172,7 @@ func (h *ModuleHandler) GetAllModulesByCourseID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":     "success",
-		"message":    title + " modules queried",
+		"message":    "modules queried",
 		"data":       enrichedModules,
 		"pagination": pagination,
 	})
@@ -409,7 +409,7 @@ func (h *ModuleHandler) CompleteModuleByID(c *gin.Context) {
 
 	userID, _ := c.Get("id")
 
-	total, completed, percentage, err := h.ModuleService.CompleteModuleByID(uint(id), userID.(uint), *req.IsCompleted)
+	total, completed, percentage, latestCompletion, err := h.ModuleService.CompleteModuleByID(uint(id), userID.(uint), *req.IsCompleted)
 	if err != nil {
 		if err.Error() == "module not found" {
 			c.AbortWithError(http.StatusNotFound, err)
@@ -429,6 +429,7 @@ func (h *ModuleHandler) CompleteModuleByID(c *gin.Context) {
 				"total_modules":     total,
 				"completed_modules": completed,
 				"percentage":        percentage,
+				"latest_completion": latestCompletion,
 			},
 		},
 	})

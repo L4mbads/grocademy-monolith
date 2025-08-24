@@ -1,14 +1,23 @@
+
 async function queryModule() {
     const courseId = getCourseIdFromUrl();
-    const container = document.getElementById("modules-container");
     const courseTitle = document.getElementById("course-title");
+    const courseInstructor = document.getElementById("course-instructor");
+    const container = document.getElementById("modules-container");
     const progressFill = document.getElementById("progress-fill");
     const progressText = document.getElementById("progress-text");
 
     const route = `api/courses/${courseId}/modules`;
     const body = await query(route)
 
-    courseTitle.textContent = body.message.split(" ")[0];
+
+    const res = await fetch(`/api/courses/${courseId}`, {
+        method: "GET",
+    })
+    const course = await res.json()
+
+    courseTitle.textContent = course.data.title;
+    courseInstructor.textContent = `by ${course.data.instructor}`;
     container.innerHTML = "";
 
     if (body.status !== "success" || !body.data) {
@@ -20,11 +29,14 @@ async function queryModule() {
 
     const totalModules = body.data.length
     var completedModules = 0
+    var dummyModuleID = -1
 
     modules.forEach((mod) => {
 
         if (mod.is_completed) {
-            completedModules += 1;
+            completedModules += 1
+            dummyModuleID = mod.id
+
         }
 
         const card = document.createElement("div");
@@ -71,6 +83,34 @@ async function queryModule() {
     progressFill.style = `width: ${percentage*100}%;`
     progressText.textContent = `${percentage*100}%`
 
+    if (percentage === 1 && dummyModuleID >= 0) {
+        try {
+            const res = await fetch(`/api/modules/${dummyModuleID}/complete`, {
+                method: "PATCH",
+                body: JSON.stringify({"is_completed": true }),
+            });
+            const result = await res.json();
+
+            if (result.status === "success") {
+
+                if (result.data.course_progress.percentage === 100) {
+                    completionDate = new Date(result.data.course_progress.latest_completion)
+                    setDownload(true)
+                } else {
+                    setDownload(false)
+                }
+
+            } else {
+                alert("Failed: " + result.message);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error reading module");
+        }
+    } else {
+        setDownload(false)
+    }
+
     // Event listener for marking module complete
     container.addEventListener("click", async (e) => {
         if (e.target.classList.contains("complete-btn")) {
@@ -91,6 +131,12 @@ async function queryModule() {
                     progressText.textContent = `${result.data.course_progress.percentage}%`
 
 
+                    if (result.data.course_progress.percentage === 100) {
+                        completionDate = new Date(result.data.course_progress.latest_completion)
+                        setDownload(true)
+                    } else {
+                        setDownload(false)
+                    }
 
                 } else {
                     alert("Failed: " + result.message);
@@ -103,24 +149,6 @@ async function queryModule() {
     });
 }
 
-// function startLongPolling() {
-//     fetch('/api/updates') // Endpoint for long polling on the server
-//         .then(response => response.json())
-//         .then(data => {
-//         // Process the received data and update the UI
-//         console.log('New data received:', data);
-//         // Immediately initiate a new long polling request
-//         startLongPolling();
-//         })
-//         .catch(error => {
-//         console.error('Long polling error:', error);
-//         // Implement retry logic or backoff strategies if needed
-//         setTimeout(startLongPolling, 5000); // Retry after 5 seconds
-//         });
-//     }
-
-// document.addEventListener('DOMContentLoaded', startLongPolling);
-document.addEventListener('DOMContentLoaded', queryModule);
 
 function handleSearchInput(e){
     if(e.keyCode === 13){
@@ -161,3 +189,5 @@ function handleLimitChange() {
     changeLimit();
     queryModule();
 }
+
+document.addEventListener('DOMContentLoaded', queryModule);

@@ -14,11 +14,14 @@
     <script src="/static/scripts/auth.js"></script>
 </head>
 <body>
+    <!-- Navbar -->
     {{ template "components/navbar.html" . }}
+
     <main class="content">
         <div class="dashboard">
         <h1>Welcome, <span id="user-name">Loading...</span></h1>
 
+        <!-- User Info -->
         <div class="user-card">
             <p><strong>Username:</strong> <span id="user-username">-</span></p>
             <p><strong>Email:</strong> <span id="user-email">-</span></p>
