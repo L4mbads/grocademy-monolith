@@ -16,9 +16,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.getElementById("title").textContent = course.title;
       document.getElementById("description").textContent = course.description;
       document.getElementById("instructor").textContent = course.instructor;
-      document.getElementById("topics").textContent = course.topics.join(", ");
       document.getElementById("price").textContent = course.price;
 
+      const topicContainer = document.getElementById("topic-container");
+      course.topics.forEach((topic) => {
+          const topicTag = document.createElement("span");
+          topicTag.textContent = topic;
+          topicTag.className = "topic-tag"
+          topicContainer.appendChild(topicTag);
+      });
       const actionButton = document.getElementById("actionButton");
       const messageEl = document.getElementById("message");
 
