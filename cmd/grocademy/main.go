@@ -21,7 +21,7 @@ import (
 // @license.name  Apache 2.0
 // @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host      localhost:8080
+// @host      https://grocademy-monolith-production.up.railway.app
 // @BasePath  /api
 
 // @securityDefinitions.apikey Bearer

@@ -20,14 +20,14 @@ type UpdateUserRequest struct {
 }
 
 type UserHandler struct {
-	UserService *services.UserService
+	UserService services.UserServicer
 }
 
 type IncrementRequest struct {
 	Increment float64 `json:"increment" binding:"required"`
 }
 
-func NewUserHandler(userService *services.UserService) *UserHandler {
+func NewUserHandler(userService services.UserServicer) *UserHandler {
 	return &UserHandler{UserService: userService}
 }
 

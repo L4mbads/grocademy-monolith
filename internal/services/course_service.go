@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 
 	"grocademy/internal/db/models"
-	"grocademy/internal/dto"
 	"grocademy/internal/pkg/pagination"
 	"grocademy/internal/storage"
 
@@ -19,7 +18,7 @@ import (
 type CourseServicer interface {
 	CreateCourse(title, description, instructor string, topics []string, price float64, thumbnail *multipart.FileHeader) (*models.Course, error)
 	GetCourseByID(userID, courseID uint) (*models.Course, int64, bool, error)
-	GetMyCourses(userID uint, page, limit int64, query string) (*[]dto.MyCourseResponse, pagination.Pagination, error)
+	GetMyCourses(userID uint, page, limit int64, query string) (*[]MyCourseResponse, pagination.Pagination, error)
 	GetAllCoursesPaginated(page, limit int64, query string) (*[]map[string]interface{}, pagination.Pagination, error)
 	UpdateCourse(id uint, updates map[string]interface{}, thumbnail *multipart.FileHeader) (*models.Course, error)
 	DeleteCourse(id uint) error
@@ -29,6 +28,12 @@ type CourseServicer interface {
 type CourseService struct {
 	DB    *gorm.DB
 	Cloud storage.CloudStorage
+}
+
+type MyCourseResponse struct {
+	models.Course
+	models.Enrollment
+	ProgressPercentage float64 `json:"progress_percentage"`
 }
 
 func NewCourseService(db *gorm.DB, cloud storage.CloudStorage) *CourseService {
@@ -130,7 +135,7 @@ func (s *CourseService) GetAllCoursesPaginated(page, limit int64, query string) 
 	return &coursesWithCount, pagination, nil
 }
 
-func (s *CourseService) GetMyCourses(userID uint, page, limit int64, query string) (*[]dto.MyCourseResponse, pagination.Pagination, error) {
+func (s *CourseService) GetMyCourses(userID uint, page, limit int64, query string) (*[]MyCourseResponse, pagination.Pagination, error) {
 	var results []struct {
 		models.Course
 		models.Enrollment
@@ -148,7 +153,7 @@ func (s *CourseService) GetMyCourses(userID uint, page, limit int64, query strin
 		return nil, pagination, fmt.Errorf("failed to paginate user's courses: %w", err)
 	}
 
-	myCourses := []dto.MyCourseResponse{}
+	myCourses := []MyCourseResponse{}
 	for _, enrolledCourse := range results {
 
 		var totalModules int64
@@ -167,7 +172,7 @@ func (s *CourseService) GetMyCourses(userID uint, page, limit int64, query strin
 			progressPercentage = float64(completedModules) / float64(totalModules) * 100
 		}
 
-		myCourses = append(myCourses, dto.MyCourseResponse{
+		myCourses = append(myCourses, MyCourseResponse{
 			Enrollment:         enrolledCourse.Enrollment,
 			Course:             enrolledCourse.Course,
 			ProgressPercentage: progressPercentage,

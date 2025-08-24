@@ -14,6 +14,16 @@ type UserService struct {
 	DB *gorm.DB
 }
 
+type UserServicer interface {
+	CreateUser(user *models.User) error
+	GetUserByID(id uint) (*models.User, error)
+	GetUsers() ([]models.User, error)
+	GetAllUsersPaginated(page, limit int64, query string) (*[]models.User, pagination.Pagination, error)
+	UpdateUser(id uint, updates map[string]interface{}) (*models.User, error)
+	IncrementUserBalance(id uint, increment float64) (*models.User, error)
+	DeleteUser(id uint) error
+}
+
 func NewUserService(db *gorm.DB) *UserService {
 	return &UserService{DB: db}
 }
