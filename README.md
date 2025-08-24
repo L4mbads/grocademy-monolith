@@ -25,9 +25,9 @@ Kunjungi http://localhost:8080
 
 
 ## Design Pattern
-1. Dependency Injection (DI)
-2. Repository Pattern
-3. Middleware Pattern
+1. Dependency Injection (DI), untuk menginjek objek service ke handler.
+3. Repository Pattern, memisahkan data access dari logika bisnis. Kelas service enggunakan GORM.
+4. Middleware Pattern, untuk menggunakan objek yang sama dalam mengatur alur request dan respons API. Misalnya auth middleware.
 
 ## Tech Stack
 * Go v1.24.2
@@ -80,6 +80,12 @@ OCP menyatakan bahwa entitas perangkat lunak harus terbuka untuk ekstensi, tetap
 Contohnya, interface UserServicer, CourseServicer, ModuleServicer sudah cukup terperinci. UserServicer hanya berfokus pada operasi pengguna, CourseServicer pada operasi kursus, dll. Antarmuka ini tidak mengandung metode asing yang tidak terkait dengan domainnya.
   - Dependency Inversion Principle menyatakan bahwa modul tingkat tinggi tidak boleh bergantung pada modul tingkat bawah, keduanya harus bergantung pada abstraksi. Misal, UserHandler bergantung pada antarmuka UserServicer (sebuah abstraksi), bukan struct UserService konkret. Hal yang sama berlaku untuk AuthHandler, CourseHandler, dan ModuleHandler.
 - B11 - Bucket, menggunakan Cloudinary
+
+## Screenshot
+![img1](https://github.com/L4mbads/grocademy-monolith/blob/6d59493847ed5040eb5a38143db5d7b01933951b/assets/Screenshot%202025-08-25%20004750.png)
+![img2](https://github.com/L4mbads/grocademy-monolith/blob/6d59493847ed5040eb5a38143db5d7b01933951b/assets/Screenshot%202025-08-25%20004826.png)
+![img3](https://github.com/L4mbads/grocademy-monolith/blob/6d59493847ed5040eb5a38143db5d7b01933951b/assets/Screenshot%202025-08-25%20005008.png)
+![img4](https://github.com/L4mbads/grocademy-monolith/blob/6d59493847ed5040eb5a38143db5d7b01933951b/assets/Screenshot%202025-08-25%20005027.png)
 
 ## Identitas
 - Fachriza Ahmad Setiyono (13523162)
