@@ -210,7 +210,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "Items per page (default 10)",
+                        "description": "Items per page (default 15)",
                         "name": "limit",
                         "in": "query"
                     },
@@ -361,7 +361,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "Items per page (default 10)",
+                        "description": "Items per page (default 15)",
                         "name": "limit",
                         "in": "query"
                     },
@@ -1001,6 +1001,67 @@ const docTemplate = `{
                 }
             }
         },
+        "/modules/{id}/complete": {
+            "patch": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Retrieve a single module by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "modules"
+                ],
+                "summary": "Get a module by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Module ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/grocademy_internal_db_models.Module"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid module ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Module not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
                 "security": [
@@ -1025,7 +1086,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "description": "Items per page (default 10)",
+                        "description": "Items per page (default 15)",
                         "name": "limit",
                         "in": "query"
                     },
@@ -1503,7 +1564,7 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string",
-                    "minLength": 6
+                    "minLength": 8
                 },
                 "username": {
                     "type": "string"
@@ -1574,7 +1635,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8080",
+	Host:             "https://grocademy-monolith-production.up.railway.app",
 	BasePath:         "/api",
 	Schemes:          []string{},
 	Title:            "Grocademy API",
