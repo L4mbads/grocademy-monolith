@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"time"
+	"unicode"
 
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -26,6 +27,32 @@ func init() {
 		fmt.Println("WARNING: JWT_SECRET_KEY not set, using default. Set it in your .env file!")
 	}
 	jwtSecret = []byte(secret)
+}
+
+func IsStrongPassword(password string) bool {
+	var (
+		hasMinLen = false
+		hasUpper  = false
+		hasLower  = false
+		hasNumber = false
+	)
+
+	if len(password) >= 8 {
+		hasMinLen = true
+	}
+
+	for _, ch := range password {
+		switch {
+		case unicode.IsUpper(ch):
+			hasUpper = true
+		case unicode.IsLower(ch):
+			hasLower = true
+		case unicode.IsDigit(ch):
+			hasNumber = true
+		}
+	}
+
+	return hasMinLen && hasUpper && hasLower && hasNumber
 }
 
 func HashPassword(password string) (string, error) {

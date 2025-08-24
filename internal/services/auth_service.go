@@ -29,6 +29,10 @@ func (s *AuthService) RegisterUser(username, email, password, firstName, lastNam
 		return nil, errors.New("username is reserved")
 	}
 
+	if !auth.IsStrongPassword(password) {
+		return nil, errors.New("password is weak")
+	}
+
 	var existingUser models.User
 
 	if err := s.DB.Where("username = ?", username).Or("email = ?", email).First(&existingUser).Error; err == nil {

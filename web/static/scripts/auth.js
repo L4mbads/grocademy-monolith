@@ -9,6 +9,20 @@ async function handleAuthForm(event, endpoint, messageId) {
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
 
+    if (document.querySelector(".register")) {
+      if(!isStrongPassword(data.password)) {
+          messageEl.textContent = "Password must be at least 8 characters containing number, lowercase, and uppercase letters.";
+          messageEl.classList.add("error");
+          return
+      }
+
+      if(data.password !== data.confirm_password) {
+          messageEl.textContent = "Confirm password doesn't match.";
+          messageEl.classList.add("error");
+          return
+      }
+    }
+
     try {
       const res = await fetch(endpoint, {
         method: "POST",
@@ -68,18 +82,27 @@ async function handleAuthForm(event, endpoint, messageId) {
   });
 
 
-  async function fetchUserData() {
-    try {
-      const res = await fetch("/api/auth/self");
-      const result = await res.json();
+async function fetchUserData() {
+  try {
+    const res = await fetch("/api/auth/self");
+    const result = await res.json();
 
-      if (!res.ok) {
-        console.error("Error fetching user:", result.message);
-        return {};
-      }
-
-      return result.data;
-    } catch (err) {
-      console.error("Failed to fetch user data", err);
+    if (!res.ok) {
+      console.error("Error fetching user:", result.message);
+      return {};
     }
+
+    return result.data;
+  } catch (err) {
+    console.error("Failed to fetch user data", err);
   }
+}
+
+function isStrongPassword(password) {
+  const hasMinLen = password.length >= 8;
+  const hasUpper = /[A-Z]/.test(password);
+  const hasLower = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+
+  return hasMinLen && hasUpper && hasLower && hasNumber;
+}
