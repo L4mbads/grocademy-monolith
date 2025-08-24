@@ -40,6 +40,10 @@ type ReorderModulesRequest struct {
 	} `json:"module_order" binding:"required"`
 }
 
+type CompleteModuleRequest struct {
+	IsCompleted *bool `json:"is_completed" binding:"required"`
+}
+
 // ModuleHandler handles module-related API requests.
 type ModuleHandler struct {
 	ModuleService services.ModuleServicer
@@ -375,5 +379,57 @@ func (h *ModuleHandler) ReorderModules(c *gin.Context) {
 		"status":  "success",
 		"message": "Modules reordered successfully",
 		"data":    req.ModuleOrder,
+	})
+}
+
+// CompleteModuleByID godoc
+// @Summary Get a module by ID
+// @Description Retrieve a single module by its ID
+// @Tags modules
+// @Produce  json
+// @Param id path int true "Module ID"
+// @Success 200 {object} models.Module
+// @Failure 400 {object} map[string]string "Invalid module ID"
+// @Failure 404 {object} map[string]string "Module not found"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Security Bearer
+// @Router /modules/{id}/complete [patch]
+func (h *ModuleHandler) CompleteModuleByID(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, errors.New("invalid course ID"))
+		return
+	}
+	var req CompleteModuleRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	userID, _ := c.Get("id")
+
+	total, completed, percentage, err := h.ModuleService.CompleteModuleByID(uint(id), userID.(uint), *req.IsCompleted)
+	if err != nil {
+		if err.Error() == "module not found" {
+			c.AbortWithError(http.StatusNotFound, err)
+			return
+		}
+		c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("failed to retrieve module: %v", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "module found",
+		"data": gin.H{
+			"module_id":    id,
+			"is_completed": *req.IsCompleted,
+			"course_progress": gin.H{
+				"total_modules":     total,
+				"completed_modules": completed,
+				"percentage":        percentage,
+			},
+		},
 	})
 }

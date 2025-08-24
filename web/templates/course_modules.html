@@ -26,9 +26,9 @@
                   <h1 id="course-title" class="course-title">Course Title</h1>
                   <div class="progress-container">
                     <div class="progress-bar">
-                      <div class="progress-fill" style="width: 40%;"></div>
+                      <div id="progress-fill" class="progress-fill" style="width: 0%;"></div>
                     </div>
-                    <span class="progress-text">40% Complete</span>
+                    <span id="progress-text" class="progress-text">0% Complete</span>
                   </div>
                 </div>
 
@@ -58,6 +58,8 @@
         const courseId = getCourseIdFromUrl();
         const container = document.getElementById("modules-container");
         const courseTitle = document.getElementById("course-title");
+        const progressFill = document.getElementById("progress-fill");
+        const progressText = document.getElementById("progress-text");
 
         try {
           const res = await fetch(`/api/courses/${courseId}/modules`);
@@ -73,10 +75,16 @@
           // Sort modules by "order"
           const modules = body.data.sort((a, b) => a.order - b.order);
 
+          const totalModules = body.data.length
+          var completedModules = 0
+
           // Render each module as a card
           modules.forEach((mod) => {
-                  // <div class="module-card">
-                  // </div>
+
+            if (mod.is_completed) {
+              completedModules += 1;
+            }
+
             const card = document.createElement("div");
             card.className = "module-card"
 
@@ -117,6 +125,10 @@
             container.appendChild(card);
           });
 
+          const percentage = completedModules / totalModules;
+          progressFill.style = `width: ${percentage*100}%;`
+          progressText.textContent = `${percentage*100}%`
+
           // Event listener for marking module complete
           container.addEventListener("click", async (e) => {
             if (e.target.classList.contains("complete-btn")) {
@@ -124,15 +136,20 @@
 
               try {
                 const res = await fetch(`/api/modules/${moduleId}/complete`, {
-                  method: "POST",
+                  method: "PATCH",
+                  body: JSON.stringify({"is_completed": e.target.textContent !== "Completed"}),
                 });
                 const result = await res.json();
 
                 if (result.status === "success") {
-                  e.target.textContent = "Completed";
-                  e.target.disabled = true;
-                  e.target.classList.remove("bg-indigo-500");
-                  e.target.classList.add("bg-gray-400");
+                  e.target.textContent = result.data.is_completed ? "Completed" : "Mark Complete";
+                  // e.target.disabled = true;
+
+                  progressFill.style = `width: ${result.data.course_progress.percentage}%;`
+                  progressText.textContent = `${result.data.course_progress.percentage}%`
+
+
+
                 } else {
                   alert("Failed: " + result.message);
                 }

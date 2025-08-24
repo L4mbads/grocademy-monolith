@@ -159,6 +159,7 @@ func NewRouter(
 			modules.GET("/:id", moduleHandler.GetModuleByID)
 			modules.PUT("/:id", moduleHandler.UpdateModule)
 			modules.DELETE("/:id", moduleHandler.DeleteModule)
+			modules.PATCH("/:id/complete", moduleHandler.CompleteModuleByID)
 		}
 	}
 

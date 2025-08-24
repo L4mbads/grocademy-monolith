@@ -15,6 +15,6 @@ type ModuleProgress struct {
 	User        User           `json:"-"` // GORM association
 	ModuleID    uint           `json:"module_id" gorm:"not null;uniqueIndex:uq_user_module"`
 	Module      Module         `json:"-"` // GORM association
-	IsCompleted bool           `json:"is_completed" gorm:"default:false"`
+	IsCompleted *bool          `json:"is_completed" gorm:"default:false"`
 	CompletedAt *time.Time     `json:"completed_at"` // Pointer to time.Time to allow NULL in DB
 }

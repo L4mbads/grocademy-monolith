@@ -25,6 +25,7 @@ type ModuleServicer interface {
 	UpdateModule(id uint, updates map[string]interface{}, pdf *multipart.FileHeader, video *multipart.FileHeader) (*models.Module, error)
 	DeleteModule(id uint) error
 	ReorderModules(courseID uint, moduleOrders []models.Module) error // Expects a slice of Module with ID and Order
+	CompleteModuleByID(moduleID uint, userID uint, isCompleted bool) (int64, int64, float64, error)
 }
 
 // ModuleService implements ModuleServicer.
@@ -112,7 +113,7 @@ func (s *ModuleService) GetModuleByID(id uint, userID uint) (*models.Module, boo
 
 	isCompleted := false
 	if progressResult.Error == nil {
-		isCompleted = progress.IsCompleted
+		isCompleted = *progress.IsCompleted
 	}
 
 	return &module, isCompleted, nil
@@ -144,7 +145,7 @@ func (s *ModuleService) GetAllModulesByCourseID(courseID uint, userID uint, page
 	for _, p := range progress {
 		println(p.ModuleID)
 		println(p.IsCompleted)
-		progressMap[p.ModuleID] = p.IsCompleted
+		progressMap[p.ModuleID] = *p.IsCompleted
 	}
 
 	if err != nil {
@@ -383,6 +384,57 @@ func saveContentFile(file *multipart.FileHeader, subDir string) (string, error) 
 		return "", fmt.Errorf("failed to save file: %w", err)
 	}
 	return savePath, nil
+}
+
+func (s *ModuleService) CompleteModuleByID(moduleID uint, userID uint, isCompleted bool) (int64, int64, float64, error) {
+	var module models.Module
+	result := s.DB.First(&module, moduleID)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return 0, 0, 0, errors.New("module not found")
+		}
+		return 0, 0, 0, fmt.Errorf("database error finding module: %w", result.Error)
+	}
+
+	// moduleProgress := models.ModuleProgress{}
+	// err := s.DB.Model(&models.ModuleProgress{}).
+	// 	Where("module_progresses.user_id = ? AND module_progresses.course_id = ?", userID, module.CourseID).
+	// 	Find(&moduleProgress).Error
+
+	module_progress := models.ModuleProgress{
+		UserID:   userID,
+		ModuleID: moduleID,
+	}
+	println("is complete?")
+	println(isCompleted)
+	result = s.DB.Where(module_progress).Assign(models.ModuleProgress{IsCompleted: &isCompleted}).FirstOrCreate(&module_progress)
+	// result = s.DB.Where(module_progress).
+	// 	Assign(models.ModuleProgress{IsCompleted: &isCompleted}).
+	// 	Select("is_completed").
+	// 	FirstOrCreate(&module_progress)
+	if result.Error != nil {
+		fmt.Printf("Error updating progress: %v", result.Error)
+		return 0, 0, 0, result.Error
+	}
+
+	// Get total modules for the course
+	var totalModules int64
+	s.DB.Model(&models.Module{}).Where("course_id = ?", module.CourseID).Count(&totalModules)
+
+	// Get total completed modules for this user and course
+	var completedModules int64
+	s.DB.Model(&models.ModuleProgress{}).
+		Joins("JOIN modules ON modules.id = module_progresses.module_id").
+		Where("module_progresses.user_id = ? AND modules.course_id = ? AND module_progresses.is_completed = ?", userID, module.CourseID, true).
+		Count(&completedModules)
+
+	// Calculate progress percentage
+	progressPercentage := 0.0
+	if totalModules > 0 {
+		progressPercentage = float64(completedModules) / float64(totalModules) * 100
+	}
+
+	return totalModules, completedModules, progressPercentage, nil
 }
 
 func (s *ModuleService) getModuleIDs(modules []models.Module) []uint {
