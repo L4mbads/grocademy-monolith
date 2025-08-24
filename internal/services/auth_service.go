@@ -11,7 +11,7 @@ import (
 
 type AuthServicer interface {
 	RegisterUser(username, email, password, firstName, lastName string) (*models.User, error)
-	LoginUser(email, password string) (string, string, error)
+	LoginUser(email, password, site string) (string, string, error)
 	GetCurrentUser(username string) (*models.User, error)
 }
 
@@ -67,7 +67,7 @@ func (s *AuthService) RegisterUser(username, email, password, firstName, lastNam
 	return user, nil
 }
 
-func (s *AuthService) LoginUser(identifier, password string) (string, string, error) {
+func (s *AuthService) LoginUser(identifier, password, site string) (string, string, error) {
 
 	var user models.User
 
@@ -78,6 +78,10 @@ func (s *AuthService) LoginUser(identifier, password string) (string, string, er
 		}
 
 		return "", "", fmt.Errorf("database error during login: %w", result.Error)
+	}
+
+	if user.Username != "admin" && site == "admin" {
+		return "", "", errors.New("non-admin cannot login to admin FE")
 	}
 
 	if !auth.CheckPasswordHash(password, user.Password) {

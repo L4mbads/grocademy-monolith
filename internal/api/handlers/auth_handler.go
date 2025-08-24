@@ -109,7 +109,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	username, token, err := h.AuthService.LoginUser(req.Identifier, req.Password)
+	site := c.DefaultQuery("site", "admin")
+	username, token, err := h.AuthService.LoginUser(req.Identifier, req.Password, site)
 	if err != nil {
 		if err.Error() == "invalid credentials" {
 			c.AbortWithError(http.StatusUnauthorized, err)

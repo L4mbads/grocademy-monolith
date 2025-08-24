@@ -414,7 +414,6 @@ func (s *ModuleService) getModuleIDs(modules []models.Module) []uint {
 
 // saveContentFile is a helper function to store uploaded PDF/Video files.
 func (s *ModuleService) saveContentFile(file *multipart.FileHeader, subDir string, title string, oldID string) (string, error) {
-	println("halo")
 	savePath := filepath.Join("course", subDir, title)
 
 	// create directory if exisn't.
@@ -442,14 +441,11 @@ func (s *ModuleService) saveContentFile(file *multipart.FileHeader, subDir strin
 	if _, err := io.Copy(dst, src); err != nil {
 		return "", fmt.Errorf("failed to save file: %w", err)
 	}
-	println("halo1")
 
 	URL, err := s.Cloud.UploadFile(file, savePath, oldID)
-	println("halo2")
 	if err != nil {
 		return "", fmt.Errorf("failed to upload to cloud: %w", err)
 	}
-	println("halo3")
 
 	return URL, nil
 }

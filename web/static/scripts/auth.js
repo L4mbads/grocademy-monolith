@@ -63,7 +63,7 @@ async function handleAuthForm(event, endpoint, messageId) {
 
     if (loginForm) {
       loginForm.addEventListener("submit", (e) =>
-        handleAuthForm(e, "/api/auth/login", "login-message")
+        handleAuthForm(e, "/api/auth/login?site=public", "login-message")
       );
     }
     if (registerForm) {

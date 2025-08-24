@@ -105,7 +105,7 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 // @Tags users
 // @Produce  json
 // @Param page query int false "Page number (default 1)"
-// @Param limit query int false "Items per page (default 10)"
+// @Param limit query int false "Items per page (default 15)"
 // @Param q query string false "Search query"
 // @Success 200 {object} []models.User
 // @Failure 500 {object} map[string]string

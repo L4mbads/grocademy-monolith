@@ -142,7 +142,7 @@ func (h *CourseHandler) GetCourseByID(c *gin.Context) {
 // @Tags courses
 // @Produce  json
 // @Param page query int false "Page number (default 1)"
-// @Param limit query int false "Items per page (default 10)"
+// @Param limit query int false "Items per page (default 15)"
 // @Param q query string false "Search query"
 // @Success 200 {object} []models.Course
 // @Failure 500 {object} map[string]string "Internal server error"
@@ -185,7 +185,7 @@ func (h *CourseHandler) GetAllCourses(c *gin.Context) {
 // @Tags courses
 // @Produce  json
 // @Param page query int false "Page number (default 1)"
-// @Param limit query int false "Items per page (default 10)"
+// @Param limit query int false "Items per page (default 15)"
 // @Param q query string false "Search query"
 // @Success 200 {object} []models.Course
 // @Failure 500 {object} map[string]string "Internal server error"
@@ -230,7 +230,7 @@ func (h *CourseHandler) GetMyCourses(c *gin.Context) {
 // @Tags courses
 // @Produce  json
 // @Param page query int false "Page number (default 1)"
-// @Param limit query int false "Items per page (default 10)"
+// @Param limit query int false "Items per page (default 15)"
 // @Param q query string false "Search query"
 // @Success 200 {object} []models.Course
 // @Failure 500 {object} map[string]string "Internal server error"
