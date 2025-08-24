@@ -86,7 +86,10 @@ async function queryCourse() {
 //     }
 
 // document.addEventListener('DOMContentLoaded', startLongPolling);
-document.addEventListener('DOMContentLoaded', queryCourse);
+document.addEventListener('DOMContentLoaded', () => {
+    queryCourse();
+    setInterval(queryCourse, 30000);
+});
 
 function handleSearchInput(e){
     if(e.keyCode === 13){
