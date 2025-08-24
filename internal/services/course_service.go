@@ -44,7 +44,7 @@ func (s *CourseService) CreateCourse(
 	var thumbnailPath string
 
 	if thumbnail != nil {
-		URL, err := s.saveThumbnail(thumbnail, title)
+		URL, err := s.saveThumbnail(thumbnail, title, "")
 		if err != nil {
 			return nil, err
 		}
@@ -190,7 +190,7 @@ func (s *CourseService) UpdateCourse(id uint, updates map[string]interface{}, th
 	// Handle thumbnail image update if provided
 	if thumbnail != nil {
 		// Save new thumbnail and update path
-		newPath, err := s.saveThumbnail(thumbnail, course.Title)
+		newPath, err := s.saveThumbnail(thumbnail, course.Title, course.ThumbnailImage)
 		if err != nil {
 			return nil, err
 		}
@@ -211,8 +211,6 @@ func (s *CourseService) UpdateCourse(id uint, updates map[string]interface{}, th
 			}
 		}
 	}
-
-	fmt.Printf("ini tipe nya %T\n", updates["Topics"])
 
 	if err := s.DB.Model(&course).Updates(updates).Error; err != nil {
 		return nil, fmt.Errorf("failed to update course: %w", err)
@@ -245,11 +243,9 @@ func (s *CourseService) DeleteCourse(id uint) error {
 	return nil
 }
 
-// saveThumbnail is a helper function to store the uploaded image.
-func (s *CourseService) saveThumbnail(thumbnail *multipart.FileHeader, title string) (string, error) {
-	// ext := filepath.Ext(thumbnail.Filename)
-	// filename := fmt.Sprintf("%d-%s%s", time.Now().UnixNano(), strings.ReplaceAll(strings.ToLower(title), " ", "-"), ext)
-	savePath := filepath.Join("course", "thumbnail", thumbnail.Filename)
+func (s *CourseService) saveThumbnail(thumbnail *multipart.FileHeader, title string, oldID string) (string, error) {
+
+	savePath := filepath.Join("course", "thumbnail", title)
 
 	// create directory if exisn't.
 	storageDir := filepath.Dir(savePath)
@@ -277,43 +273,12 @@ func (s *CourseService) saveThumbnail(thumbnail *multipart.FileHeader, title str
 		return "", fmt.Errorf("failed to save file: %w", err)
 	}
 
-	URL, err := s.Cloud.UploadFile(thumbnail, savePath)
+	URL, err := s.Cloud.UploadFile(thumbnail, savePath, oldID)
 	if err != nil {
 		return "", fmt.Errorf("failed to upload to cloud: %w", err)
 	}
+
 	return URL, nil
-	// ext := filepath.Ext(thumbnail.Filename)
-	// filename := fmt.Sprintf("%d-%s%s", time.Now().UnixNano(), strings.ReplaceAll(strings.ToLower(title), " ", "-"), ext)
-	// savePath := filepath.Join("storage", "images", filename)
-
-	// storageDir := filepath.Dir(savePath)
-	// if _, err := os.Stat(storageDir); os.IsNotExist(err) {
-	// 	if err := os.MkdirAll(storageDir, 0755); err != nil {
-	// 		return "", fmt.Errorf("failed to create storage directory: %w", err)
-	// 	}
-	// }
-
-	// src, err := thumbnail.Open()
-	// if err != nil {
-	// 	return "", fmt.Errorf("failed to open uploaded file: %w", err)
-	// }
-	// defer src.Close()
-
-	// dst, err := os.Create(savePath)
-	// if err != nil {
-	// 	return "", fmt.Errorf("failed to create destination file: %w", err)
-	// }
-	// defer dst.Close()
-
-	// if _, err := io.Copy(dst, src); err != nil {
-	// 	return "", fmt.Errorf("failed to save file: %w", err)
-	// }
-
-	// URL, err := s.Cloud.UploadFile(thumbnail, savePath)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to upload to cloud: %w", err)
-	// }
-	// return savePath, nil
 }
 
 func (s *CourseService) BuyCourse(userID uint, courseID uint) (float64, uint, error) {

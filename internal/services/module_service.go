@@ -8,11 +8,11 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"time"
 
 	"grocademy/internal/db/models"
 	"grocademy/internal/pkg/pagination"
+	"grocademy/internal/storage"
 
 	"gorm.io/gorm"
 )
@@ -30,12 +30,13 @@ type ModuleServicer interface {
 
 // ModuleService implements ModuleServicer.
 type ModuleService struct {
-	DB *gorm.DB
+	DB    *gorm.DB
+	Cloud storage.CloudStorage
 }
 
 // NewModuleService creates a new ModuleService.
-func NewModuleService(db *gorm.DB) *ModuleService {
-	return &ModuleService{DB: db}
+func NewModuleService(db *gorm.DB, cloud storage.CloudStorage) *ModuleService {
+	return &ModuleService{DB: db, Cloud: cloud}
 }
 
 // CreateModule creates a new module for a given course, handling file uploads.
@@ -62,7 +63,7 @@ func (s *ModuleService) CreateModule(
 
 	var pdfPath string
 	if pdf != nil {
-		path, err := saveContentFile(pdf, "pdfs")
+		path, err := s.saveContentFile(pdf, "pdf", title, "")
 		if err != nil {
 			return nil, err
 		}
@@ -71,7 +72,7 @@ func (s *ModuleService) CreateModule(
 
 	var videoPath string
 	if video != nil {
-		path, err := saveContentFile(video, "videos")
+		path, err := s.saveContentFile(video, "video", title, "")
 		if err != nil {
 			return nil, err
 		}
@@ -169,29 +170,29 @@ func (s *ModuleService) UpdateModule(id uint, updates map[string]interface{}, pd
 
 	// Handle PDF file update
 	if pdf != nil {
-		newPDFPath, err := saveContentFile(pdf, "pdfs")
+		newPDFPath, err := s.saveContentFile(pdf, "pdf", module.Title, module.PDFPath)
 		if err != nil {
 			return nil, err
 		}
 		updates["PDFPath"] = newPDFPath
 		// Optionally, delete old PDF file
 		if module.PDFPath != "" {
-			if err := os.Remove(module.PDFPath); err != nil {
-				fmt.Printf("Warning: Failed to delete old PDF file %s: %v\n", module.PDFPath, err)
-			}
+			// if err := os.Remove(module.PDFPath); err != nil {
+			// 	fmt.Printf("Warning: Failed to delete old PDF file %s: %v\n", module.PDFPath, err)
+			// }
 		}
 	} else if _, ok := updates["pdf_content"]; ok && updates["pdf_content"] == nil { // Check if client explicitly sent null to clear
 		updates["PDFPath"] = ""
 		if module.PDFPath != "" {
-			if err := os.Remove(module.PDFPath); err != nil {
-				fmt.Printf("Warning: Failed to delete old PDF file %s when clearing: %v\n", module.PDFPath, err)
-			}
+			// if err := os.Remove(module.PDFPath); err != nil {
+			// 	fmt.Printf("Warning: Failed to delete old PDF file %s when clearing: %v\n", module.PDFPath, err)
+			// }
 		}
 	}
 
 	// Handle Video file update
 	if video != nil {
-		newVideoPath, err := saveContentFile(video, "videos")
+		newVideoPath, err := s.saveContentFile(video, "video", module.Title, module.VideoPath)
 		if err != nil {
 			return nil, err
 		}
@@ -354,37 +355,6 @@ func (s *ModuleService) ReorderModules(courseID uint, moduleOrders []models.Modu
 
 }
 
-// saveContentFile is a helper function to store uploaded PDF/Video files.
-func saveContentFile(file *multipart.FileHeader, subDir string) (string, error) {
-	ext := filepath.Ext(file.Filename)
-	filename := fmt.Sprintf("%d-%s%s", time.Now().UnixNano(), strconv.FormatInt(time.Now().Unix(), 10), ext) // More unique name
-	savePath := filepath.Join("storage", subDir, filename)
-
-	storageDir := filepath.Dir(savePath)
-	if _, err := os.Stat(storageDir); os.IsNotExist(err) {
-		if err := os.MkdirAll(storageDir, 0755); err != nil {
-			return "", fmt.Errorf("failed to create storage directory %s: %w", storageDir, err)
-		}
-	}
-
-	src, err := file.Open()
-	if err != nil {
-		return "", fmt.Errorf("failed to open uploaded file: %w", err)
-	}
-	defer src.Close()
-
-	dst, err := os.Create(savePath)
-	if err != nil {
-		return "", fmt.Errorf("failed to create destination file %s: %w", savePath, err)
-	}
-	defer dst.Close()
-
-	if _, err := io.Copy(dst, src); err != nil {
-		return "", fmt.Errorf("failed to save file: %w", err)
-	}
-	return savePath, nil
-}
-
 func (s *ModuleService) CompleteModuleByID(moduleID uint, userID uint, isCompleted bool) (int64, int64, float64, *time.Time, error) {
 	var module models.Module
 	result := s.DB.First(&module, moduleID)
@@ -440,4 +410,46 @@ func (s *ModuleService) getModuleIDs(modules []models.Module) []uint {
 		ids = append(ids, module.ID)
 	}
 	return ids
+}
+
+// saveContentFile is a helper function to store uploaded PDF/Video files.
+func (s *ModuleService) saveContentFile(file *multipart.FileHeader, subDir string, title string, oldID string) (string, error) {
+	println("halo")
+	savePath := filepath.Join("course", subDir, title)
+
+	// create directory if exisn't.
+	storageDir := filepath.Dir(savePath)
+	if _, err := os.Stat(storageDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(storageDir, 0755); err != nil {
+			return "", fmt.Errorf("failed to create storage directory: %w", err)
+		}
+	}
+
+	// save to local
+
+	src, err := file.Open()
+	if err != nil {
+		return "", fmt.Errorf("failed to open uploaded file: %w", err)
+	}
+	defer src.Close()
+
+	dst, err := os.Create(savePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to create destination file: %w", err)
+	}
+	defer dst.Close()
+
+	if _, err := io.Copy(dst, src); err != nil {
+		return "", fmt.Errorf("failed to save file: %w", err)
+	}
+	println("halo1")
+
+	URL, err := s.Cloud.UploadFile(file, savePath, oldID)
+	println("halo2")
+	if err != nil {
+		return "", fmt.Errorf("failed to upload to cloud: %w", err)
+	}
+	println("halo3")
+
+	return URL, nil
 }

@@ -47,6 +47,27 @@ async function queryModule() {
         title.className = "module-title"
         card.appendChild(title)
 
+
+        if (mod.video_content) {
+            // const video = document.createElement("a");
+            // video.href = mod.video_content;
+            // video.download = "video";
+            // video.className = "btn"
+            // video.innerText = "Download Video"
+            const videoContainer = document.createElement("div");
+            videoContainer.className = "video-container"
+            card.appendChild(videoContainer)
+
+            const video = document.createElement("video");
+            video.controls = true
+            video.textContent = "Your browser does not support video tag."
+            videoContainer.appendChild(video)
+
+            const source = document.createElement("source");
+            source.src = mod.video_content;
+            video.appendChild(source);
+        }
+
         const description = document.createElement("p");
         description.textContent = mod.description;
         description.className = "module-description"
@@ -56,19 +77,16 @@ async function queryModule() {
         actions.className = "module-actions"
         card.appendChild(actions)
 
-        const pdf = document.createElement("a");
-        pdf.href = mod.pdf_content;
-        pdf.download = "pdf";
-        pdf.className = "btn"
-        pdf.innerText = "Download PDF"
-        actions.appendChild(pdf)
+        if (mod.pdf_content) {
+            const pdf = document.createElement("a");
+            pdf.href = mod.pdf_content;
+            pdf.className = "btn"
+            pdf.target = "_blank"
+            pdf.rel = "noopener noreferrer"
+            pdf.innerText = "Download PDF"
+            actions.appendChild(pdf)
+        }
 
-        const video = document.createElement("a");
-        video.href = mod.video_content;
-        video.download = "video";
-        video.className = "btn"
-        video.innerText = "Download Video"
-        actions.appendChild(video)
 
         const actionButton = document.createElement("button")
         actionButton.className = "btn complete-btn";

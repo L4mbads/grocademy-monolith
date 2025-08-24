@@ -47,7 +47,7 @@ func main() {
 	userService := services.NewUserService(gormDB)
 	authService := services.NewAuthService(gormDB)
 	courseService := services.NewCourseService(gormDB, cloudStorage)
-	moduleService := services.NewModuleService(gormDB)
+	moduleService := services.NewModuleService(gormDB, cloudStorage)
 
 	// Initialize handlers
 	userHandler := handlers.NewUserHandler(userService)

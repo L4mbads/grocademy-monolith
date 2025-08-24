@@ -12,6 +12,7 @@ async function queryCourse() {
 
         const img = document.createElement("img");
         img.src = course.thumbnail_image || "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/No-Image-Placeholder-landscape.svg/768px-No-Image-Placeholder-landscape.svg.png";
+        img.className = "image"
         card.appendChild(img);
 
         const cardDetail = document.createElement("div");

@@ -46,13 +46,10 @@ func Paginate(db *gorm.DB, dest any, page, limit int64, searchableColumns []stri
 		TotalItems:  0,
 	}
 
-	println("halo1")
 	if err := countDB.Find(dest).Count(&totalItems).Error; err != nil {
-		print("masuk kah")
 		return nil, pagination, err
 	}
 	println(totalItems)
-	println("halo2")
 
 	totalPages := int64(math.Ceil(float64(totalItems) / float64(limit)))
 	if totalPages == 0 && totalItems > 0 {
@@ -76,7 +73,6 @@ func Paginate(db *gorm.DB, dest any, page, limit int64, searchableColumns []stri
 	if err := db.Limit(int(limit)).Offset(int(offset)).Find(dest).Error; err != nil {
 		return nil, pagination, err
 	}
-	println("halo3")
 
 	return dest, pagination, nil
 }
