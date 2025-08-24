@@ -114,6 +114,7 @@ func NewRouter(
 	authAPIMiddleware := middlewares.NewAuthAPIMiddleware()
 	protectedAPI.Use(authAPIMiddleware.GetHandlerFunc())
 
+	adminMiddleware := middlewares.NewAdminMiddleware()
 	{
 		auth := protectedAPI.Group("/auth")
 		{
@@ -121,6 +122,7 @@ func NewRouter(
 		}
 
 		users := protectedAPI.Group("/users")
+		users.Use(adminMiddleware.GetHandlerFunc())
 		{
 			users.GET("", userHandler.GetAllUsers)
 			users.POST("", userHandler.CreateUser)
@@ -136,28 +138,39 @@ func NewRouter(
 
 		courses := protectedAPI.Group("/courses")
 		{
-			courses.POST("", courseHandler.CreateCourse)
 			courses.GET("", courseHandler.GetAllCourses)
 			courses.GET("/my-courses", courseHandler.GetMyCourses)
-			courses.GET("/:id", courseHandler.GetCourseByID)
-			courses.PUT("/:id", courseHandler.UpdateCourse)
-			courses.DELETE("/:id", courseHandler.DeleteCourse)
 			courses.POST("/:id/buy", courseHandler.BuyCourse)
+			courses.GET("/:id", courseHandler.GetCourseByID)
+
+			protectedCourses := courses.Group("")
+			protectedCourses.Use(adminMiddleware.GetHandlerFunc())
+
+			protectedCourses.POST("", courseHandler.CreateCourse)
+			protectedCourses.PUT("/:id", courseHandler.UpdateCourse)
+			protectedCourses.DELETE("/:id", courseHandler.DeleteCourse)
 
 			modulesByCourse := courses.Group("/:id/modules")
 			{
-				modulesByCourse.POST("", moduleHandler.CreateModule)
 				modulesByCourse.GET("", moduleHandler.GetAllModulesByCourseID)
-				modulesByCourse.PATCH("/reorder", moduleHandler.ReorderModules)
+
+				protectedModulesByCourse := modulesByCourse.Group("")
+				protectedModulesByCourse.Use(adminMiddleware.GetHandlerFunc())
+
+				protectedModulesByCourse.POST("", moduleHandler.CreateModule)
+				protectedModulesByCourse.PATCH("/reorder", moduleHandler.ReorderModules)
 			}
 		}
 
 		modules := protectedAPI.Group("/modules")
 		{
 			modules.GET("/:id", moduleHandler.GetModuleByID)
-			modules.PUT("/:id", moduleHandler.UpdateModule)
-			modules.DELETE("/:id", moduleHandler.DeleteModule)
 			modules.PATCH("/:id/complete", moduleHandler.CompleteModuleByID)
+
+			protectedModules := modules.Group("")
+			protectedModules.Use(adminMiddleware.GetHandlerFunc())
+			protectedModules.PUT("/:id", moduleHandler.UpdateModule)
+			protectedModules.DELETE("/:id", moduleHandler.DeleteModule)
 		}
 	}
 
