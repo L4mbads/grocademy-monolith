@@ -23,11 +23,11 @@
     <!-- Page Content -->
     <main class="content">
         <div class="container browser">
-            <h1>Course Module</h1>
-            <button id="downloadCertificate" onclick="handleDownloadCertificate()">Download Certificate</button>
-
-            <!-- Search Bar -->
-            {{ template "components/search_bar.html" . }}
+            <div class="course-modules-header">
+              <div></div>
+              <h1>Course Module</h1>
+              <button id="downloadCertificate" class="download-certificate" onclick="handleDownloadCertificate()">Download Certificate</button>
+            </div>
 
             <div class="course-modules-container">
 
