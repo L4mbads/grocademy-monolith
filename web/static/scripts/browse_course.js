@@ -7,44 +7,55 @@ async function queryCourse() {
 
     if (data.status === "success" && data.data) {
         data.data.forEach(course => {
-        const card = document.createElement("div");
-        card.className = "card";
+            const card = document.createElement("div");
+            card.className = "card";
 
-        const img = document.createElement("img");
-        img.src = course.thumbnail_image || "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/No-Image-Placeholder-landscape.svg/768px-No-Image-Placeholder-landscape.svg.png";
-        img.className = "image"
-        card.appendChild(img);
+            const img = document.createElement("img");
+            img.src = course.thumbnail_image || "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/No-Image-Placeholder-landscape.svg/768px-No-Image-Placeholder-landscape.svg.png";
+            img.className = "image"
+            card.appendChild(img);
 
-        const cardDetail = document.createElement("div");
-        cardDetail.className = "card-detail";
-        card.appendChild(cardDetail)
+            const cardDetail = document.createElement("div");
+            cardDetail.className = "card-detail";
+            card.appendChild(cardDetail)
 
-        const title = document.createElement("h3");
-        title.textContent = course.title;
-        cardDetail.appendChild(title);
+            const title = document.createElement("h3");
+            title.textContent = course.title;
+            cardDetail.appendChild(title);
 
-        const instructor = document.createElement("p");
-        instructor.textContent = "Instructor: " + course.instructor;
-        cardDetail.appendChild(instructor);
+            const instructor = document.createElement("p");
+            instructor.textContent = "Instructor: " + course.instructor;
+            cardDetail.appendChild(instructor);
 
-        const desc = document.createElement("p");
-        desc.textContent = course.description;
-        cardDetail.appendChild(desc);
+            const desc = document.createElement("p");
+            desc.textContent = course.description;
+            cardDetail.appendChild(desc);
 
-        const price = document.createElement("div");
-        price.className = "price";
-        price.textContent = course.price > 0 ? "$" + course.price : "Free";
-        cardDetail.appendChild(price);
+            const topicContainer = document.createElement("div");
+            topicContainer.className = "topic-container"
+            cardDetail.appendChild(topicContainer);
 
-        const btn = document.createElement("button");
-        btn.textContent = "View Details";
-        btn.onclick = () => {
-            window.location.href = `/courses/${course.id}`;
-        };
+            course.topics.forEach((topic) => {
+                const topicTag = document.createElement("span");
+                topicTag.textContent = topic;
+                topicTag.className = "topic-tag"
+                topicContainer.appendChild(topicTag);
+            });
 
-        cardDetail.appendChild(btn);
+            const price = document.createElement("div");
+            price.className = "price";
+            price.textContent = course.price > 0 ? "$" + course.price : "Free";
+            cardDetail.appendChild(price);
 
-        container.appendChild(card);
+            const btn = document.createElement("button");
+            btn.textContent = "View Details";
+            btn.onclick = () => {
+                window.location.href = `/courses/${course.id}`;
+            };
+
+            cardDetail.appendChild(btn);
+
+            container.appendChild(card);
         });
 
         // update pagination

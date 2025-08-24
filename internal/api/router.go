@@ -83,10 +83,10 @@ func NewRouter(
 			c.HTML(http.StatusOK, "dashboard.html", gin.H{})
 		})
 		authenticatedWeb.GET("/courses", func(c *gin.Context) {
-			c.HTML(http.StatusOK, "browse_courses.html", gin.H{"route": "api/courses"})
+			c.HTML(http.StatusOK, "browse_courses.html", gin.H{"title": "Browse Course", "route": "api/courses"})
 		})
 		authenticatedWeb.GET("/my-courses", func(c *gin.Context) {
-			c.HTML(http.StatusOK, "browse_courses.html", gin.H{"route": "api/courses/my-courses"})
+			c.HTML(http.StatusOK, "browse_courses.html", gin.H{"title": "My Course", "route": "api/courses/my-courses"})
 		})
 		authenticatedWeb.GET("/courses/:id", func(c *gin.Context) {
 			c.HTML(http.StatusOK, "course.html", gin.H{})
