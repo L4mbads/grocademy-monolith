@@ -132,7 +132,7 @@ func (h *ModuleHandler) GetAllModulesByCourseID(c *gin.Context) {
 	}
 
 	pageStr := c.DefaultQuery("page", "1")
-	limitStr := c.DefaultQuery("limit", "10")
+	limitStr := c.DefaultQuery("limit", "15")
 
 	page, err := strconv.ParseInt(pageStr, 10, 64)
 	if err != nil {
@@ -144,10 +144,11 @@ func (h *ModuleHandler) GetAllModulesByCourseID(c *gin.Context) {
 		c.AbortWithError(http.StatusBadRequest, errors.New("invalid limit number"))
 		return
 	}
+	limit = min(limit, 50)
 
 	userID, _ := c.Get("id")
 
-	paginatedModules, progressMap, pagination, err := h.ModuleService.GetAllModulesByCourseID(uint(courseID), userID.(uint), int64(page), int64(limit), "")
+	paginatedModules, progressMap, pagination, err := h.ModuleService.GetAllModulesByCourseID(uint(courseID), userID.(uint), int64(page), int64(limit))
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("failed to retrieve modules: %v", err))
 		return

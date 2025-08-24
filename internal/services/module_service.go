@@ -21,7 +21,7 @@ import (
 type ModuleServicer interface {
 	CreateModule(courseID uint, title, description string, pdf *multipart.FileHeader, video *multipart.FileHeader) (*models.Module, error)
 	GetModuleByID(id uint, userID uint) (*models.Module, bool, error)
-	GetAllModulesByCourseID(courseID uint, userID uint, page, limit int64, query string) (*[]models.Module, *map[uint]bool, pagination.Pagination, error)
+	GetAllModulesByCourseID(courseID uint, userID uint, page, limit int64) (*[]models.Module, *map[uint]bool, pagination.Pagination, error)
 	UpdateModule(id uint, updates map[string]interface{}, pdf *multipart.FileHeader, video *multipart.FileHeader) (*models.Module, error)
 	DeleteModule(id uint) error
 	ReorderModules(courseID uint, moduleOrders []models.Module) error // Expects a slice of Module with ID and Order
@@ -120,11 +120,10 @@ func (s *ModuleService) GetModuleByID(id uint, userID uint) (*models.Module, boo
 }
 
 // GetAllModulesByCourseID retrieves all modules for a specific course with pagination and search.
-func (s *ModuleService) GetAllModulesByCourseID(courseID uint, userID uint, page, limit int64, query string) (*[]models.Module, *map[uint]bool, pagination.Pagination, error) {
+func (s *ModuleService) GetAllModulesByCourseID(courseID uint, userID uint, page, limit int64) (*[]models.Module, *map[uint]bool, pagination.Pagination, error) {
 	var modules []models.Module
-	searchableColumns := []string{"title", "description"} // Columns to search within modules
+	searchableColumns := []string{"title", "description"}
 
-	// Filter by CourseID
 	dbQuery := s.DB.Where("course_id = ?", courseID).Order("\"order\" ASC") // Order by "order" column
 
 	filteredModules, pagination, err := pagination.Paginate(
@@ -133,7 +132,7 @@ func (s *ModuleService) GetAllModulesByCourseID(courseID uint, userID uint, page
 		page,
 		limit,
 		searchableColumns,
-		query,
+		"",
 	)
 
 	assertedModules := filteredModules.(*[]models.Module)
@@ -402,10 +401,6 @@ func (s *ModuleService) CompleteModuleByID(moduleID uint, userID uint, isComplet
 	}
 
 	result = s.DB.Where(module_progress).Assign(models.ModuleProgress{IsCompleted: &isCompleted}).FirstOrCreate(&module_progress)
-	// result = s.DB.Where(module_progress).
-	// 	Assign(models.ModuleProgress{IsCompleted: &isCompleted}).
-	// 	Select("is_completed").
-	// 	FirstOrCreate(&module_progress)
 	if result.Error != nil {
 		fmt.Printf("Error updating progress: %v", result.Error)
 		return 0, 0, 0, nil, result.Error
@@ -415,14 +410,6 @@ func (s *ModuleService) CompleteModuleByID(moduleID uint, userID uint, isComplet
 	var totalModules int64
 	s.DB.Model(&models.Module{}).Where("course_id = ?", module.CourseID).Count(&totalModules)
 
-	// // Get total completed modules for this user and course
-	// var completedModules int64
-	// s.DB.Model(&models.ModuleProgress{}).
-	// 	Joins("JOIN modules ON modules.id = module_progresses.module_id").
-	// 	Where("module_progresses.user_id = ? AND modules.course_id = ? AND module_progresses.is_completed = ?", userID, module.CourseID, true).
-	// 	Count(&completedModules)
-
-	// NEW: Combined query for completed modules and latest completion date
 	var res struct {
 		CompletedModules int64
 		LatestCompletion *time.Time

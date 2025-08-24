@@ -20,7 +20,12 @@ func Paginate(db *gorm.DB, dest any, page, limit int64, searchableColumns []stri
 	if query != "" && len(searchableColumns) > 0 {
 		searchQuery := ""
 		for i, col := range searchableColumns {
-			searchQuery += fmt.Sprintf("%s ILIKE ?", col) // ILIKE is case-insensitive
+			if col == "courses.topics" {
+				searchQuery += "EXISTS (SELECT 1 FROM unnest(courses.topics) AS t WHERE t ILIKE ?)"
+			} else {
+				searchQuery += fmt.Sprintf("%s ILIKE ?", col)
+			}
+			// searchQuery += fmt.Sprintf("%s ILIKE ?", col) // ILIKE is case-insensitive
 			if i < len(searchableColumns)-1 {
 				searchQuery += " OR "
 			}
@@ -42,9 +47,11 @@ func Paginate(db *gorm.DB, dest any, page, limit int64, searchableColumns []stri
 	}
 
 	println("halo1")
-	if err := countDB.Model(dest).Count(&totalItems).Error; err != nil {
+	if err := countDB.Find(dest).Count(&totalItems).Error; err != nil {
+		print("masuk kah")
 		return nil, pagination, err
 	}
+	println(totalItems)
 	println("halo2")
 
 	totalPages := int64(math.Ceil(float64(totalItems) / float64(limit)))

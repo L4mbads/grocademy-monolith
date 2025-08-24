@@ -188,7 +188,7 @@ func (h *UserHandler) IncrementBalance(c *gin.Context) {
 	})
 }
 
-// UpdateUser godoc (NEW HANDLER)
+// UpdateUser godoc
 // @Summary Update a user's data
 // @Description Update specified fields of a user by ID
 // @Tags users
@@ -255,7 +255,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	})
 }
 
-// DeleteUser godoc (NEW HANDLER)
+// DeleteUser godoc
 // @Summary Delete a user
 // @Description Deletes a user record by ID (soft delete)
 // @Tags users

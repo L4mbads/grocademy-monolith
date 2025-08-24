@@ -91,7 +91,7 @@ func (h *CourseHandler) CreateCourse(c *gin.Context) {
 	})
 }
 
-// GetCourseByID godoc (NEW HANDLER)
+// GetCourseByID godoc
 // @Summary Get a course by ID
 // @Description Retrieve a single course by its ID
 // @Tags courses
@@ -136,7 +136,7 @@ func (h *CourseHandler) GetCourseByID(c *gin.Context) {
 	})
 }
 
-// GetAllCourses godoc (NEW HANDLER)
+// GetAllCourses godoc
 // @Summary Get all courses with pagination and search
 // @Description Retrieve a list of all courses with optional pagination and search parameters
 // @Tags courses
@@ -150,7 +150,7 @@ func (h *CourseHandler) GetCourseByID(c *gin.Context) {
 // @Router /courses [get]
 func (h *CourseHandler) GetAllCourses(c *gin.Context) {
 	pageStr := c.DefaultQuery("page", "1")
-	limitStr := c.DefaultQuery("limit", "10")
+	limitStr := c.DefaultQuery("limit", "15")
 	query := c.DefaultQuery("q", "")
 
 	page, err := strconv.ParseInt(pageStr, 10, 64)
@@ -163,6 +163,7 @@ func (h *CourseHandler) GetAllCourses(c *gin.Context) {
 		c.AbortWithError(http.StatusBadRequest, errors.New("invalid limit number"))
 		return
 	}
+	limit = min(limit, 50)
 
 	paginatedCourses, pagination, err := h.CourseService.GetAllCoursesPaginated(int64(page), int64(limit), query)
 	if err != nil {
@@ -178,7 +179,7 @@ func (h *CourseHandler) GetAllCourses(c *gin.Context) {
 	})
 }
 
-// GetMyCourses godoc (NEW HANDLER)
+// GetMyCourses godoc
 // @Summary Get all courses with pagination and search
 // @Description Retrieve a list of all courses with optional pagination and search parameters
 // @Tags courses
@@ -192,7 +193,7 @@ func (h *CourseHandler) GetAllCourses(c *gin.Context) {
 // @Router /courses [get]
 func (h *CourseHandler) GetMyCourses(c *gin.Context) {
 	pageStr := c.DefaultQuery("page", "1")
-	limitStr := c.DefaultQuery("limit", "10")
+	limitStr := c.DefaultQuery("limit", "15")
 	query := c.DefaultQuery("q", "")
 
 	page, err := strconv.ParseInt(pageStr, 10, 64)
@@ -206,6 +207,7 @@ func (h *CourseHandler) GetMyCourses(c *gin.Context) {
 		return
 	}
 
+	limit = min(limit, 50)
 	userID, _ := c.Get("id")
 
 	paginatedCourses, pagination, err := h.CourseService.GetMyCourses(userID.(uint), int64(page), int64(limit), query)
@@ -260,7 +262,7 @@ func (h *CourseHandler) BuyCourse(c *gin.Context) {
 	})
 }
 
-// UpdateCourse godoc (NEW HANDLER)
+// UpdateCourse godoc
 // @Summary Update a course's data
 // @Description Update specified fields of a course by ID, with optional thumbnail upload
 // @Tags courses
@@ -334,7 +336,7 @@ func (h *CourseHandler) UpdateCourse(c *gin.Context) {
 	})
 }
 
-// DeleteCourse godoc (NEW HANDLER)
+// DeleteCourse godoc
 // @Summary Delete a course
 // @Description Deletes a course record by ID (soft delete)
 // @Tags courses
