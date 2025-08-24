@@ -4,7 +4,7 @@ let currentQuery = "";
 let currentLimit = 15;
 
 async function query(route) {
-    const res = await fetch(`${encodeURIComponent(route)}?q=${encodeURIComponent(currentQuery)}&page=${currentPage}&limit=${currentLimit}`);
+    const res = await fetch(`/${encodeURIComponent(route)}?q=${encodeURIComponent(currentQuery)}&page=${currentPage}&limit=${currentLimit}`);
     const data = await res.json();
 
     return data

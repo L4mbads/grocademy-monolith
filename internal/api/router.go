@@ -46,15 +46,13 @@ func NewRouter(
 		MaxAge:           12 * time.Hour,
 	}))
 
-	// bruh
-	// r.LoadHTMLGlob("web/templates/components/*.html")
-	// r.LoadHTMLGlob("web/templates/*.html")
 	r.LoadHTMLFiles(
 		"web/templates/components/navbar.html",
+		"web/templates/components/search_bar.html",
+		"web/templates/components/paging.html",
 		"web/templates/layout.html",
 		"web/templates/dashboard.html",
 		"web/templates/browse_courses.html",
-		"web/templates/my_courses.html",
 		"web/templates/course_modules.html",
 		"web/templates/course.html",
 		"web/templates/register.html",
@@ -85,10 +83,10 @@ func NewRouter(
 			c.HTML(http.StatusOK, "dashboard.html", gin.H{})
 		})
 		authenticatedWeb.GET("/courses", func(c *gin.Context) {
-			c.HTML(http.StatusOK, "browse_courses.html", gin.H{})
+			c.HTML(http.StatusOK, "browse_courses.html", gin.H{"route": "api/courses"})
 		})
 		authenticatedWeb.GET("/my-courses", func(c *gin.Context) {
-			c.HTML(http.StatusOK, "my_courses.html", gin.H{})
+			c.HTML(http.StatusOK, "browse_courses.html", gin.H{"route": "api/courses/my-courses"})
 		})
 		authenticatedWeb.GET("/courses/:id", func(c *gin.Context) {
 			c.HTML(http.StatusOK, "course.html", gin.H{})

@@ -7,12 +7,11 @@ import (
 	"mime/multipart"
 	"os"
 	"path/filepath"
-	"strings"
-	"time"
 
 	"grocademy/internal/db/models"
 	"grocademy/internal/dto"
 	"grocademy/internal/pkg/pagination"
+	"grocademy/internal/storage"
 
 	"gorm.io/gorm"
 )
@@ -28,11 +27,12 @@ type CourseServicer interface {
 }
 
 type CourseService struct {
-	DB *gorm.DB
+	DB    *gorm.DB
+	Cloud storage.CloudStorage
 }
 
-func NewCourseService(db *gorm.DB) *CourseService {
-	return &CourseService{DB: db}
+func NewCourseService(db *gorm.DB, cloud storage.CloudStorage) *CourseService {
+	return &CourseService{DB: db, Cloud: cloud}
 }
 
 func (s *CourseService) CreateCourse(
@@ -44,35 +44,12 @@ func (s *CourseService) CreateCourse(
 	var thumbnailPath string
 
 	if thumbnail != nil {
-		ext := filepath.Ext(thumbnail.Filename)
-		filename := fmt.Sprintf("%d-%s%s", time.Now().UnixNano(), strings.ReplaceAll(strings.ToLower(title), " ", "-"), ext)
-		savePath := filepath.Join("storage", "images", filename)
-
-		// create directory if exisn't.
-		storageDir := filepath.Dir(savePath)
-		if _, err := os.Stat(storageDir); os.IsNotExist(err) {
-			if err := os.MkdirAll(storageDir, 0755); err != nil {
-				return nil, fmt.Errorf("failed to create storage directory: %w", err)
-			}
-		}
-
-		// save to local
-		src, err := thumbnail.Open()
+		URL, err := s.saveThumbnail(thumbnail, title)
 		if err != nil {
-			return nil, fmt.Errorf("failed to open uploaded file: %w", err)
+			return nil, err
 		}
-		defer src.Close()
 
-		dst, err := os.Create(savePath)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create destination file: %w", err)
-		}
-		defer dst.Close()
-
-		if _, err := io.Copy(dst, src); err != nil {
-			return nil, fmt.Errorf("failed to save file: %w", err)
-		}
-		thumbnailPath = savePath
+		thumbnailPath = URL
 	}
 
 	course := models.Course{
@@ -176,17 +153,17 @@ func (s *CourseService) GetAllCoursesPaginated(page, limit int64, query string) 
 	var coursesWithCount []map[string]interface{}
 	for _, res := range results {
 		courseMap := map[string]interface{}{
-			"id":             res.ID,
-			"title":          res.Title,
-			"description":    res.Description,
-			"instructor":     res.Instructor,
-			"topics":         res.Topics,
-			"price":          res.Price,
-			"thumbnail_path": res.ThumbnailImage,
-			"created_at":     res.CreatedAt,
-			"updated_at":     res.UpdatedAt,
-			"deleted_at":     res.DeletedAt,
-			"total_modules":  res.TotalModules, // ADDED
+			"id":              res.ID,
+			"title":           res.Title,
+			"description":     res.Description,
+			"instructor":      res.Instructor,
+			"topics":          res.Topics,
+			"price":           res.Price,
+			"thumbnail_image": res.ThumbnailImage,
+			"created_at":      res.CreatedAt,
+			"updated_at":      res.UpdatedAt,
+			"deleted_at":      res.DeletedAt,
+			"total_modules":   res.TotalModules, // ADDED
 		}
 		coursesWithCount = append(coursesWithCount, courseMap)
 	}
@@ -280,11 +257,11 @@ func (s *CourseService) UpdateCourse(id uint, updates map[string]interface{}, th
 	// Handle thumbnail image update if provided
 	if thumbnail != nil {
 		// Save new thumbnail and update path
-		newPath, err := saveThumbnail(thumbnail, course.Title)
+		newPath, err := s.saveThumbnail(thumbnail, course.Title)
 		if err != nil {
 			return nil, err
 		}
-		updates["ThumbnailPath"] = newPath
+		updates["ThumbnailImage"] = newPath
 
 		// Optionally, delete the old thumbnail file
 		if course.ThumbnailImage != "" {
@@ -294,7 +271,7 @@ func (s *CourseService) UpdateCourse(id uint, updates map[string]interface{}, th
 		}
 	} else if _, ok := updates["thumbnail_image"]; ok && updates["thumbnail_image"] == nil {
 		// If thumbnail_image was explicitly sent as null/empty string, clear the path
-		updates["ThumbnailPath"] = ""
+		updates["ThumbnailImage"] = ""
 		if course.ThumbnailImage != "" {
 			if err := os.Remove(course.ThumbnailImage); err != nil {
 				fmt.Printf("Warning: Failed to delete old thumbnail image %s when clearing: %v\n", course.ThumbnailImage, err)
@@ -336,17 +313,20 @@ func (s *CourseService) DeleteCourse(id uint) error {
 }
 
 // saveThumbnail is a helper function to store the uploaded image.
-func saveThumbnail(thumbnail *multipart.FileHeader, title string) (string, error) {
-	ext := filepath.Ext(thumbnail.Filename)
-	filename := fmt.Sprintf("%d-%s%s", time.Now().UnixNano(), strings.ReplaceAll(strings.ToLower(title), " ", "-"), ext)
-	savePath := filepath.Join("storage", "images", filename)
+func (s *CourseService) saveThumbnail(thumbnail *multipart.FileHeader, title string) (string, error) {
+	// ext := filepath.Ext(thumbnail.Filename)
+	// filename := fmt.Sprintf("%d-%s%s", time.Now().UnixNano(), strings.ReplaceAll(strings.ToLower(title), " ", "-"), ext)
+	savePath := filepath.Join("course", "thumbnail", thumbnail.Filename)
 
+	// create directory if exisn't.
 	storageDir := filepath.Dir(savePath)
 	if _, err := os.Stat(storageDir); os.IsNotExist(err) {
 		if err := os.MkdirAll(storageDir, 0755); err != nil {
 			return "", fmt.Errorf("failed to create storage directory: %w", err)
 		}
 	}
+
+	// save to local
 
 	src, err := thumbnail.Open()
 	if err != nil {
@@ -363,7 +343,44 @@ func saveThumbnail(thumbnail *multipart.FileHeader, title string) (string, error
 	if _, err := io.Copy(dst, src); err != nil {
 		return "", fmt.Errorf("failed to save file: %w", err)
 	}
-	return savePath, nil
+
+	URL, err := s.Cloud.UploadFile(thumbnail, savePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to upload to cloud: %w", err)
+	}
+	return URL, nil
+	// ext := filepath.Ext(thumbnail.Filename)
+	// filename := fmt.Sprintf("%d-%s%s", time.Now().UnixNano(), strings.ReplaceAll(strings.ToLower(title), " ", "-"), ext)
+	// savePath := filepath.Join("storage", "images", filename)
+
+	// storageDir := filepath.Dir(savePath)
+	// if _, err := os.Stat(storageDir); os.IsNotExist(err) {
+	// 	if err := os.MkdirAll(storageDir, 0755); err != nil {
+	// 		return "", fmt.Errorf("failed to create storage directory: %w", err)
+	// 	}
+	// }
+
+	// src, err := thumbnail.Open()
+	// if err != nil {
+	// 	return "", fmt.Errorf("failed to open uploaded file: %w", err)
+	// }
+	// defer src.Close()
+
+	// dst, err := os.Create(savePath)
+	// if err != nil {
+	// 	return "", fmt.Errorf("failed to create destination file: %w", err)
+	// }
+	// defer dst.Close()
+
+	// if _, err := io.Copy(dst, src); err != nil {
+	// 	return "", fmt.Errorf("failed to save file: %w", err)
+	// }
+
+	// URL, err := s.Cloud.UploadFile(thumbnail, savePath)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to upload to cloud: %w", err)
+	// }
+	// return savePath, nil
 }
 
 func (s *CourseService) BuyCourse(userID uint, courseID uint) (float64, uint, error) {

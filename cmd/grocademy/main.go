@@ -5,6 +5,8 @@ import (
 	"grocademy/internal/api/handlers"
 	"grocademy/internal/db"
 	"grocademy/internal/services"
+	"grocademy/internal/storage"
+	"log"
 )
 
 // @title           Grocademy API
@@ -36,10 +38,15 @@ func main() {
 	db.Init()
 	gormDB := db.GetDB()
 
+	cloudStorage, err := storage.NewCloudinaryStorage()
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 	// Initialize services
 	userService := services.NewUserService(gormDB)
 	authService := services.NewAuthService(gormDB)
-	courseService := services.NewCourseService(gormDB)
+	courseService := services.NewCourseService(gormDB, cloudStorage)
 	moduleService := services.NewModuleService(gormDB)
 
 	// Initialize handlers

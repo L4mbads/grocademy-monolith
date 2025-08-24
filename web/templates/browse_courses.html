@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta
     name="description"
-    content="Grocademy web monolith.">
+    content="Grocademy course browser.">
     <title>Browse Courses</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,42 +13,26 @@
     <link rel="stylesheet" href="/static/styles/style.css">
     <script src="/static/scripts/browser.js"></script>
     <script>
-        const route = "api/courses";
+        const route = "{{ .route }}";
     </script>
     <script src="/static/scripts/browse_course.js"></script>
 </head>
 <body>
+    <!-- Navbar -->
     {{ template "components/navbar.html" . }}
-
     <!-- Page Content -->
     <main class="content">
         <div class="container browser">
             <h1>Browse Courses</h1>
 
             <!-- Search Bar -->
-            <div class="search-bar">
-                <input type="text" id="searchInput" onkeypress="handleSearchInput(event)" placeholder="Search courses...">
-                <button id="searchButton" onclick="search();queryCourse()">Search</button>
-            </div>
+            {{ template "components/search_bar.html" . }}
 
             <!-- Courses Grid -->
             <div id="coursesContainer" class="courses"></div>
 
             <!-- Pagination -->
-            <div class="pagination">
-                <button id="prevBtn" onclick="changePage(-1);queryCourse()">Prev</button>
-                <span id="pageInfo"></span>
-                <button id="nextBtn" onclick="changePage(1);queryCourse()">Next</button>
-
-                <label for="limitSelect">Per Page:</label>
-                <select id="limitSelect" onchange="changeLimit();queryCourse()">
-                    <option value="5">5</option>
-                    <option value="10">10</option>
-                    <option value="15" selected>15</option>
-                    <option value="20">20</option>
-                    <option value="50">50</option>
-                </select>
-            </div>
+            {{ template "components/paging.html" . }}
         </div>
     </main>
 </body>

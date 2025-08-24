@@ -1,0 +1,16 @@
+{{ define "components/paging.html" }}
+<div class="pagination">
+    <button id="prevBtn" onclick="handlePrevBtn()">Prev</button>
+    <span id="pageInfo"></span>
+    <button id="nextBtn" onclick="handleNextBtn()">Next</button>
+
+    <label for="limitSelect">Per Page:</label>
+    <select id="limitSelect" onchange="handleLimitChange()">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="15" selected>15</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+    </select>
+</div>
+{{ end }}
