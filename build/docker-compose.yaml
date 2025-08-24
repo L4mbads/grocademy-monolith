@@ -59,6 +59,8 @@ services:
       DB_PORT: ${DB_PORT}
       DB_SSLMODE: ${DB_SSLMODE}
       APP_PORT: ${APP_PORT}
+      CLOUDINARY_URL: ${CLOUDINARY_URL}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
     depends_on:
       migrate:
         condition: service_completed_successfully

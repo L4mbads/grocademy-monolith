@@ -22,5 +22,6 @@ COPY --from=builder /grocademy .
 COPY --from=migrator /go/bin/migrate .
 COPY --from=builder /app/migrations ./migrations/
 COPY --from=builder /app/web/templates ./web/templates/
+COPY --from=builder /app/web/static ./web/static/
 EXPOSE 8080
 CMD ["./grocademy"]
